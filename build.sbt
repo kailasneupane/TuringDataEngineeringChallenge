@@ -17,7 +17,6 @@ lazy val root = (project in file("."))
 
 val sparkVersion = "2.3.0"
 
-
 libraryDependencies ++= Seq(
 
   "org.apache.spark" %% "spark-core" % sparkVersion,
@@ -29,6 +28,10 @@ libraryDependencies ++= Seq(
   "org.twitter4j" % "twitter4j-stream" % "4.0.6"
   //"org.apache.spark" % "spark-core_2.11_logging" % "1.5.2" from s"${baseDirectory}/src/resources/jars/spark-core_2.11-1.5.2.logging.jar"
 )
+
+
+
+mainClass in (Compile, run) := Some("turing.loader.App")
 
 // Uncomment the following for publishing to Sonatype.
 // See https://www.scala-sbt.org/1.x/docs/Using-Sonatype.html for more detail.
