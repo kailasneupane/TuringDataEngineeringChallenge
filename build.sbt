@@ -12,20 +12,26 @@ javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 lazy val root = (project in file("."))
   .settings(
     name := "turing_git_analysis",
+    assemblyJarName in assembly := "turing_git_analysis.jar",
     libraryDependencies += scalaTest % Test
   )
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
 
 val sparkVersion = "2.3.0"
 
 libraryDependencies ++= Seq(
 
-  "org.apache.spark" %% "spark-core" % sparkVersion,
-  "org.apache.spark" %% "spark-streaming" % sparkVersion,
-  "org.apache.spark" %% "spark-sql" % sparkVersion,
-  "org.apache.spark" %% "spark-hive" % sparkVersion,
-  "org.apache.spark" %% "spark-repl" % sparkVersion,
-  "org.apache.spark" %% "spark-streaming-twitter" % "1.6.3",
-  "org.twitter4j" % "twitter4j-stream" % "4.0.6"
+  "org.apache.spark" %% "spark-core" % sparkVersion
+  //"org.apache.spark" %% "spark-streaming" % sparkVersion,
+  //"org.apache.spark" %% "spark-sql" % sparkVersion,
+  //"org.apache.spark" %% "spark-hive" % sparkVersion,
+  //"org.apache.spark" %% "spark-repl" % sparkVersion,
+  //"org.apache.spark" %% "spark-streaming-twitter" % "1.6.3",
+  //"org.twitter4j" % "twitter4j-stream" % "4.0.6"
   //"org.apache.spark" % "spark-core_2.11_logging" % "1.5.2" from s"${baseDirectory}/src/resources/jars/spark-core_2.11-1.5.2.logging.jar"
 )
 

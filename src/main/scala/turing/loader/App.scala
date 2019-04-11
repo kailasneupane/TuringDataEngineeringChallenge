@@ -19,11 +19,12 @@ object App {
     /**
       * 1st. clone each repos
       */
-    var repoUrl = "https://github.com/tensorflow/tensorflow"
+    var repoUrl = "https://github.com/kevinburke/hamms"
     var repoName = repoUrl.substring(repoUrl.lastIndexOf("/"))
     var cloningPath: String = "output/repos"
     var pyProjectPath = cloningPath + repoName + "/*"
-    Utils.cloneRepoAndRetainPyFilesOnly(repoUrl)
+    println(pyProjectPath + "pp_paths")
+    Utils.cloneRepoAndRetainPyFilesOnly(repoUrl, "hdfs://localhost:54310/user/kneupane/repos/")
 
 
     /**
