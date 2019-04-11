@@ -1,7 +1,11 @@
 package turing.loader
 
 
-import java.io.File
+import java.net.URI
+
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.FileSystem
+import org.apache.hadoop.fs.Path
 
 import sys.process._
 
@@ -10,6 +14,9 @@ import sys.process._
   */
 object Utils {
 
+  val hadoopConf = new Configuration()
+  val hdfs = FileSystem.get(new URI("hdfs://localhost:54310"), hadoopConf)
+
   private def retainPyFilesOnly(path: java.io.File): Unit = {
     if (path.isDirectory)
       path.listFiles.foreach(retainPyFilesOnly)
@@ -17,17 +24,29 @@ object Utils {
       path.delete()
   }
 
+  def cloneRepoAndRetainPyFilesOnly(url: String, hadoopPathOfRetainedPy: String = "stage0/repos/"): Unit = {
+    val cloningPathLocal: String = "/home/kneupane/work/projects/practice/turing_git_analysis/output/repos/"
+    val directory = new java.io.File(cloningPathLocal)
 
-  def cloneRepoAndRetainPyFilesOnly(url: String, cloningPath: String = "output/repos/"): Unit = {
-    val directory = new java.io.File(cloningPath)
+    val repoName = url.substring(url.lastIndexOf("/"))
+
+
     if (!directory.exists) {
       directory.mkdir
     }
-    val repoName = url.substring(url.lastIndexOf("/"))
-    s"git clone $url $cloningPath$repoName --branch master --single-branch" !
 
-    retainPyFilesOnly(new File(cloningPath + repoName))
-    println(s"git clone $repoName successful and only .py files retained.")
+    s"git clone $url $cloningPathLocal$repoName --branch master --single-branch" !
+
+    retainPyFilesOnly(new java.io.File(cloningPathLocal + repoName))
+    println(s"git clone $repoName successful and only .py files retained in local.")
+
+
+    val srcPath = cloningPathLocal + repoName
+    val destPath = hadoopPathOfRetainedPy + repoName
+    //todo delete path before copying destPath
+    hdfs.copyFromLocalFile(true, true, new Path(srcPath), new Path(destPath))
+
+    println(s"Files copied from $srcPath to $destPath")
   }
 
 }

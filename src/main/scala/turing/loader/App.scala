@@ -23,8 +23,7 @@ object App {
     var repoName = repoUrl.substring(repoUrl.lastIndexOf("/"))
     var cloningPath: String = "output/repos"
     var pyProjectPath = cloningPath + repoName + "/*"
-    println(pyProjectPath + "pp_paths")
-    Utils.cloneRepoAndRetainPyFilesOnly(repoUrl, "hdfs://localhost:54310/user/kneupane/repos/")
+    Utils.cloneRepoAndRetainPyFilesOnly(repoUrl)
 
 
     /**
