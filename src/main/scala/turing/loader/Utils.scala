@@ -41,10 +41,12 @@ object Utils {
     println(s"git clone $repoName successful and only .py files retained in local.")
 
 
-    val srcPath = cloningPathLocal + repoName
-    val destPath = hadoopPathOfRetainedPy + repoName
-    //todo delete path before copying destPath
-    hdfs.copyFromLocalFile(true, true, new Path(srcPath), new Path(destPath))
+    val srcPath = new Path(cloningPathLocal + repoName)
+    val destPath = new Path(hadoopPathOfRetainedPy + repoName)
+    if (hdfs.exists(destPath)) {
+      hdfs.delete(destPath, true)
+    }
+    hdfs.copyFromLocalFile(true, true, srcPath, destPath)
 
     println(s"Files copied from $srcPath to $destPath")
   }
