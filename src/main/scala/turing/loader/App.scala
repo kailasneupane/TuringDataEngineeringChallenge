@@ -1,7 +1,11 @@
 package turing.loader
 
+import java.io.InputStream
+import java.net.{HttpURLConnection, URL}
+
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
+import turing.utils.HdfsUtils
 
 object App {
 
@@ -13,13 +17,20 @@ object App {
 
   def main(args: Array[String]): Unit = {
 
+
     // clone each repo
     //https://raw.githubusercontent.com/monikturing/turing-data-challenge/master/url_list.csv
+    Utils.uberRepoLoader()
 
     /**
       * 1st. clone each repos
       */
     var repoUrl = "https://github.com/kevinburke/hamms"
+    var repoName = repoUrl.substring(repoUrl.lastIndexOf("/") + 1)
+    var pyStage0Path = HdfsUtils.rootPath + "/" + Utils.pathProperty.getProperty("pyStage0Path") + repoName
+
+
+    println(pyStage0Path)
     Utils.cloneRepoAndRetainPyFilesOnly(repoUrl)
 
 
@@ -40,20 +51,21 @@ object App {
       *
       * 6. Average Number of variables defined per line of code in the repository.
       */
- //   val pyRdd: RDD[String] = sparkContext.textFile(pyProjectPath).filter(x => !x.trim.startsWith("#") || !x.trim.isEmpty)
+    val pyRdd: RDD[String] = sparkContext.textFile(pyStage0Path + "/*").filter(x => !x.trim.startsWith("#") || !x.trim.isEmpty)
 
 
     /**
       * 1. Number of lines of code [this excludes comments, whitespaces, blank lines].
       */
-    //println("No. of python lines in repo. = " + pyRdd.count())
+    var pyLines = pyRdd.count()
+    println("No. of python lines in repo. = " + pyLines)
 
     /**
       * 2. List of external libraries/packages used.
       */
 
 
-    println("Process Completed!!!")
+    println("\n\nProcess Completed!!!")
   }
 
 }

@@ -1,3 +1,11 @@
+#url
+uberRepoUrl = https://raw.githubusercontent.com/monikturing/turing-data-challenge/master/url_list.csv
+
+
+#local paths
+uberRepoLocalPath = output/uber_repo/
 pyLocalPath = output/repos/
 
+#hadoop paths
+uberRepoRawPath = raw/uber_repo/
 pyStage0Path = stage0/repos/
