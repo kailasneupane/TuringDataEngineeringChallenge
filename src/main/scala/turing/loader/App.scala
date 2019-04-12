@@ -20,9 +20,6 @@ object App {
       * 1st. clone each repos
       */
     var repoUrl = "https://github.com/kevinburke/hamms"
-    var repoName = repoUrl.substring(repoUrl.lastIndexOf("/"))
-    var cloningPath: String = "output/repos"
-    var pyProjectPath = cloningPath + repoName + "/*"
     Utils.cloneRepoAndRetainPyFilesOnly(repoUrl)
 
 
@@ -43,13 +40,13 @@ object App {
       *
       * 6. Average Number of variables defined per line of code in the repository.
       */
-    val pyRdd: RDD[String] = sparkContext.textFile(pyProjectPath).filter(x => !x.trim.startsWith("#") || !x.trim.isEmpty)
+ //   val pyRdd: RDD[String] = sparkContext.textFile(pyProjectPath).filter(x => !x.trim.startsWith("#") || !x.trim.isEmpty)
 
 
     /**
       * 1. Number of lines of code [this excludes comments, whitespaces, blank lines].
       */
-    println("No. of python lines in repo. = " + pyRdd.count())
+    //println("No. of python lines in repo. = " + pyRdd.count())
 
     /**
       * 2. List of external libraries/packages used.

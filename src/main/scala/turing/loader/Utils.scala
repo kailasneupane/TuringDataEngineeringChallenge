@@ -1,11 +1,10 @@
 package turing.loader
 
 
-import java.net.URI
+import java.util.Properties
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.FileSystem
-import org.apache.hadoop.fs.Path
+import org.apache.commons.io.FileUtils
+import turing.utils.{HdfsUtils, PropertiesUtils}
 
 import sys.process._
 
@@ -14,39 +13,30 @@ import sys.process._
   */
 object Utils {
 
-  val hadoopConf = new Configuration()
-  val hdfs = FileSystem.get(new URI("hdfs://localhost:54310"), hadoopConf)
+  var pathProperty: Properties = PropertiesUtils.loadProperties("paths/in_out_paths.jobcfg")
 
   private def retainPyFilesOnly(path: java.io.File): Unit = {
     if (path.isDirectory)
       path.listFiles.foreach(retainPyFilesOnly)
-    if (path.exists && !path.getName.endsWith(".py"))
+    if (path.exists && !path.getName.endsWith(".py") || path.isHidden)
       path.delete()
   }
 
-  def cloneRepoAndRetainPyFilesOnly(url: String, hadoopPathOfRetainedPy: String = "stage0/repos/"): Unit = {
-    val cloningPathLocal: String = "/home/kneupane/work/projects/practice/turing_git_analysis/output/repos/"
-    val directory = new java.io.File(cloningPathLocal)
+  def cloneRepoAndRetainPyFilesOnly(url: String): Unit = {
+    val cloningPathLocal: String = pathProperty.getProperty("pyLocalPath")
+    val repoName = url.substring(url.lastIndexOf("/") + 1)
+    val cloneDirectory = new java.io.File(cloningPathLocal + "/" + repoName)
 
-    val repoName = url.substring(url.lastIndexOf("/"))
-
-
-    if (!directory.exists) {
-      directory.mkdir
-    }
+    FileUtils.deleteDirectory(cloneDirectory)
 
     s"git clone $url $cloningPathLocal$repoName --branch master --single-branch" !
 
-    retainPyFilesOnly(new java.io.File(cloningPathLocal + repoName))
-    println(s"git clone $repoName successful and only .py files retained in local.")
+    retainPyFilesOnly(new java.io.File(cloningPathLocal + "/" + repoName))
+    println(s"git clone $repoName successful and only .py files retained.")
 
-
-    val srcPath = new Path(cloningPathLocal + repoName)
-    val destPath = new Path(hadoopPathOfRetainedPy + repoName)
-    if (hdfs.exists(destPath)) {
-      hdfs.delete(destPath, true)
-    }
-    hdfs.copyFromLocalFile(true, true, srcPath, destPath)
+    val srcPath = cloningPathLocal + repoName
+    val destPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("pyStage0Path") + "/" + repoName
+    HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, true)
 
     println(s"Files copied from $srcPath to $destPath")
   }
