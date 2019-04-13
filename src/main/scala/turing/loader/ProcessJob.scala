@@ -4,8 +4,15 @@ package turing.loader
 import java.io.File
 import java.net.URL
 import java.util.Properties
+import java.util.concurrent.atomic.LongAccumulator
 
+import org.antlr.v4.runtime.tree.ParseTreeWalker
+import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.commons.io.FileUtils
+import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
+import org.apache.spark.util.LongAccumulator
+import parser.python3.{Python3BaseListener, Python3Lexer, Python3Parser}
 import turing.utils.{HdfsUtils, PropertiesUtils}
 
 import sys.process._
@@ -13,7 +20,7 @@ import sys.process._
 /**
   * Created by kneupane on 4/10/19.
   */
-object Utils {
+object ProcessJob {
 
   var pathProperty: Properties = PropertiesUtils.loadProperties("paths/in_out_paths.jobcfg")
 
@@ -59,6 +66,33 @@ object Utils {
     HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
 
     println(s"Files copied from $srcPath to $destPath")
+  }
+
+  def listOutPyImportsVarsFuncsPerRepo(pyRepoRdd: RDD[(String, String)]): Unit = {
+    println("list garnema chiryo :D")
+
+    // var imports: Set[String] = Set()
+    // var functionsCounter: Long = 0l
+    // var functionParamCounter: Long = 0l
+
+    var variableCounter = 0l
+
+    pyRepoRdd.foreach(x => {
+      var lexer = new Python3Lexer(CharStreams.fromString(x._2))
+      var parser = new Python3Parser(new CommonTokenStream(lexer))
+
+
+
+      ParseTreeWalker.DEFAULT.walk(new Python3BaseListener() {
+
+        override def enterExpr_stmt(ctx: Python3Parser.Expr_stmtContext): Unit = {
+          var variable = ctx.testlist_star_expr().get(0).getText()
+          if (!variable.trim.startsWith("print")) {
+            //increase counter
+          }
+        }
+      }, parser.file_input())
+    })
   }
 
 }

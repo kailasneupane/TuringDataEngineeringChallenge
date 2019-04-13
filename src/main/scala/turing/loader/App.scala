@@ -1,7 +1,5 @@
 package turing.loader
 
-import java.io.InputStream
-import java.net.{HttpURLConnection, URL}
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
@@ -17,21 +15,22 @@ object App {
 
   def main(args: Array[String]): Unit = {
 
+    println("Process stdd. !!!")
 
     // clone each repo
     //https://raw.githubusercontent.com/monikturing/turing-data-challenge/master/url_list.csv
-    Utils.uberRepoLoader()
+    //  ProcessJob.uberRepoLoader()
 
     /**
       * 1st. clone each repos
       */
     var repoUrl = "https://github.com/kevinburke/hamms"
     var repoName = repoUrl.substring(repoUrl.lastIndexOf("/") + 1)
-    var pyStage0Path = HdfsUtils.rootPath + "/" + Utils.pathProperty.getProperty("pyStage0Path") + repoName
+    var pyStage0RepoPath = HdfsUtils.rootPath + "/" + ProcessJob.pathProperty.getProperty("pyStage0Path") + repoName
 
 
-    println(pyStage0Path)
-    Utils.cloneRepoAndRetainPyFilesOnly(repoUrl)
+    println(pyStage0RepoPath)
+    // ProcessJob.cloneRepoAndRetainPyFilesOnly(repoUrl)
 
 
     /**
@@ -51,19 +50,20 @@ object App {
       *
       * 6. Average Number of variables defined per line of code in the repository.
       */
-    val pyRdd: RDD[String] = sparkContext.textFile(pyStage0Path + "/*").filter(x => !x.trim.startsWith("#") || !x.trim.isEmpty)
-
+    val pyRepoRdd: RDD[(String, String)] = sparkContext.wholeTextFiles(pyStage0RepoPath + "/*")
 
     /**
       * 1. Number of lines of code [this excludes comments, whitespaces, blank lines].
       */
-    var pyLines = pyRdd.count()
-    println("No. of python lines in repo. = " + pyLines)
+    val filteredPyLines: RDD[String] = sparkContext.textFile(pyStage0RepoPath + "/*").filter(x => !x.trim.startsWith("#") || !x.trim.isEmpty)
+    println("No. of python lines in repo. = " + filteredPyLines.count())
 
     /**
       * 2. List of external libraries/packages used.
+      * 5. Average number of parameters per function definition in the repository.
+      * 6. Average Number of variables defined per line of code in the repository.
       */
-
+    ProcessJob.listOutPyImportsVarsFuncsPerRepo(pyRepoRdd)
 
     println("\n\nProcess Completed!!!")
   }

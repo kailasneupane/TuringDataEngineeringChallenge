@@ -4,7 +4,8 @@ import java.net.URI
 
 import sys.process._
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path, RemoteIterator}
+import turing.loader.ProcessJob
 
 object HdfsUtils {
 
@@ -14,8 +15,7 @@ object HdfsUtils {
 
   def main(args: Array[String]): Unit = {
     println(hdfs.getHomeDirectory)
-    var property = PropertiesUtils.loadProperties("paths/in_out_paths.jobcfg")
-    println(property.getProperty("pyLocalPath"))
+    iterateEachRepoFiles("hamms")
   }
 
   def rootPath = hdfs.getHomeDirectory.toString
@@ -27,6 +27,17 @@ object HdfsUtils {
       hdfs.delete(destPath, true)
     }
     hdfs.copyFromLocalFile(delSrc, true, srcPath, destPath)
+  }
+
+  def iterateEachRepoFiles(repoName: String): RemoteIterator[LocatedFileStatus] = {
+    val fullPath = rootPath + "/" + ProcessJob.pathProperty.getProperty("pyStage0Path") + repoName
+    var eachPyPath: RemoteIterator[LocatedFileStatus] = hdfs.listFiles(new Path(fullPath), true)
+    //var listBuffer:ListBuffer[String] = ListBuffer()
+    // while (eachPyPath.hasNext){
+    //  listBuffer.append(eachPyPath.next().getPath.toString)
+    //}
+    //listBuffer.foreach(println)
+    eachPyPath
   }
 
 

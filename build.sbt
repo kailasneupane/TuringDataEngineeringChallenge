@@ -30,6 +30,9 @@ libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-hdfs" % "2.6.0"
 )
 
+// https://mvnrepository.com/artifact/org.antlr/antlr4-runtime
+libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.7.2"
+
 
 
 mainClass in(Compile, run) := Some("turing.loader.App")
