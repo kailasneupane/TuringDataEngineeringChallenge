@@ -21,9 +21,8 @@ class PyCodeExplorer(sparkContext: SparkContext, repoName: String) extends Pytho
 
   //variable counter
   override def enterExpr_stmt(ctx: Python3Parser.Expr_stmtContext): Unit = {
-    var variable = ctx.testlist_star_expr().get(0).getText()
-    if (!variable.trim.endsWith(")") || !variable.trim.startsWith("print") || !variable.trim.startsWith("\"")) {
-      println("ledol var = " + variable)
+    var variableName = ctx.testlist_star_expr().get(0).getText()
+    if (!(variableName.trim.endsWith(")") || variableName.trim.startsWith("print") || variableName.trim.startsWith("\""))) {
       variableAccumulator.add(1)
     }
   }
@@ -32,18 +31,20 @@ class PyCodeExplorer(sparkContext: SparkContext, repoName: String) extends Pytho
   override def enterImport_stmt(ctx: Python3Parser.Import_stmtContext): Unit = {
     try {
       var importName = ctx.import_name().dotted_as_names().dotted_as_name().get(0).dotted_name().NAME().get(0).getText()
-      if (!importName.equals(repoName))
+      if (!importName.equals(repoName)) {
         importsAccumulator.add(importName)
+      }
     } catch {
       case e: NullPointerException => ()
     }
   }
 
-  //import counter2
+  //import counter2 (may contain internal imports so, we need to filter that)
   override def enterImport_from(ctx: Python3Parser.Import_fromContext): Unit = {
     var importName = ctx.dotted_name().getText()
-    if (!importName.equals(repoName))
+    if (!(importName.equals(repoName)  || ctx.getText.startsWith("from."))) {
       importsAccumulator.add(importName)
+    }
   }
 
   //functions counter
