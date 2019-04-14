@@ -11,9 +11,11 @@ import org.apache.commons.io.FileUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import parser.python3.{Python3Lexer, Python3Parser}
-import turing.lib.PyCodeExplorer
+import turing.lib.{DuplicateFinder, PyCodeExplorer}
 import turing.utils.{HdfsUtils, PropertiesUtils}
 
+import scala.collection.immutable
+import scala.collection.mutable.ListBuffer
 import sys.process._
 
 /**
@@ -72,23 +74,34 @@ object ProcessJob {
     println(s"Files copied from $srcPath to $destPath")
   }
 
-  def listOutPyImportsVarsFuncsPerRepo(sparkContext: SparkContext, pyRepoRdd: RDD[(String, String)], repoName: String): PyCodeExplorer = {
+  def listOutPyImportsVarsFuncsPerRepo(sparkContext: SparkContext, pyRepoRdd: RDD[(String, String)], repoName: String): (PyCodeExplorer, Double) = {
     var pyCodeExplorer = new PyCodeExplorer(sparkContext, repoName)
+    var duplicateFinder = new DuplicateFinder(sparkContext)
+
+    var filesCount = pyRepoRdd.count()
 
     pyRepoRdd.foreach(x => {
+      //to get function, function params, imports, variables
       var lexer = new Python3Lexer(CharStreams.fromString(x._2))
       var parser = new Python3Parser(new CommonTokenStream(lexer))
-
       ParseTreeWalker.DEFAULT.walk(pyCodeExplorer, parser.file_input())
+
+      //to get duplicate code count
+      duplicateFinder.duplicateAnalysisPerFile(x._2)
+
     })
 
     println("Variables count = " + pyCodeExplorer.getVariableCount)
-    println("Imports Array = " + pyCodeExplorer.getImportsArray)
+    println("Imports Array = " + pyCodeExplorer.getImportsArray.mkString(", "))
     println("functions count = " + pyCodeExplorer.getFunctionsCount)
     println("functions parameter count = " + pyCodeExplorer.getFunctionParamsCount)
-    pyCodeExplorer
+    println("duplicate per repo = " + duplicateFinder.getConsecutive4LineDuplicateCount)
+    println("duplicate per file = " + 1.0 * duplicateFinder.getConsecutive4LineDuplicateCount / filesCount)
+    (pyCodeExplorer, 1.0 * duplicateFinder.getConsecutive4LineDuplicateCount / filesCount)
   }
 
 }
+
+
 
 

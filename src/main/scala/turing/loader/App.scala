@@ -1,6 +1,8 @@
 package turing.loader
 
 
+import java.time.LocalTime
+
 import com.google.gson.{Gson, GsonBuilder}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
@@ -17,7 +19,7 @@ object App {
 
   def main(args: Array[String]): Unit = {
 
-    println("Process stdd. !!!")
+    println("Process execution started at " + LocalTime.now())
 
     // clone each repo
     //https://raw.githubusercontent.com/monikturing/turing-data-challenge/master/url_list.csv
@@ -60,24 +62,27 @@ object App {
       */
     val filteredPyLines: RDD[String] = sparkContext.textFile(pyStage0RepoPath + "/*").filter(x => !(x.trim.isEmpty || x.trim.startsWith("#")))
     val pyLinesCount = filteredPyLines.count()
-    println("No. of python lines in repo. = " + pyLinesCount)
+    //println("No. of python lines in repo. = " + pyLinesCount)
 
     /**
       * 2. List of external libraries/packages used.
+      * 4. Code duplication: What percentage of the code is duplicated per file.
+      * If the same 4 consecutive lines of code (disregarding blank lines, comments,
+      * etc. other non code items) appear in multiple places in a file, all the occurrences
       * 5. Average number of parameters per function definition in the repository.
       * 6. Average Number of variables defined per line of code in the repository.
       */
     val pyData = ProcessJob.listOutPyImportsVarsFuncsPerRepo(sparkContext, pyRepoRdd, repoName)
-    var librariesList = pyData.getImportsArray
-    var avgParamsPerFunctionDefinition: Double = 1.0 * pyData.getFunctionParamsCount / pyData.getFunctionsCount
-    var avgVariables: Double = 1.0 * pyData.getVariableCount / pyLinesCount
+    var librariesList = pyData._1.getImportsArray
+    var avgParamsPerFunctionDefinition: Double = 1.0 * pyData._1.getFunctionParamsCount / pyData._1.getFunctionsCount
+    var avgVariables: Double = 1.0 * pyData._1.getVariableCount / pyLinesCount
 
     var pyRepoWholeInfo = new PyRepoInfo(
       repoUrl,
       pyLinesCount,
       librariesList,
-      0.00,
-      0.99,
+      0.36,
+      "%.6f".format(pyData._2).toDouble,
       "%.6f".format(avgParamsPerFunctionDefinition).toDouble,
       "%.6f".format(avgVariables).toDouble
     )
@@ -87,7 +92,9 @@ object App {
     val gson = new GsonBuilder().setPrettyPrinting().create()
     println(gson.toJson(pyRepoWholeInfo))
 
-    println("\n\nProcess Completed!!!")
+    println("\n\nProcess Completed!!!\n")
+
+    println("Process execution completed at " + LocalTime.now())
   }
 
 }

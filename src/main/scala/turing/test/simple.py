@@ -1,14 +1,23 @@
 import time
 import os
+import ludo.dudo
 import gud,df
 import numpy as np
 from flask import request
+
+from .morse import musa
 
 # hawa hawa comment ne cha
     # hawa hawa comment ne cha
  # hawa hawa comment ne cha
 
 x = 55
+y = 45;z=4
+
+def ddsum(a, b):
+    u = 34
+    return a + b + u
+
 y = 45;z=4
 
 def ddsum(a, b):
@@ -33,3 +42,8 @@ usum()
 usum()
 
 st = usum()
+
+import time
+import os
+import ludo.dudo
+import gud,df
