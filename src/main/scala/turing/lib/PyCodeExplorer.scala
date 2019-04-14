@@ -22,7 +22,8 @@ class PyCodeExplorer(sparkContext: SparkContext, repoName: String) extends Pytho
   //variable counter
   override def enterExpr_stmt(ctx: Python3Parser.Expr_stmtContext): Unit = {
     var variable = ctx.testlist_star_expr().get(0).getText()
-    if (!variable.trim.endsWith(")")) {
+    if (!variable.trim.endsWith(")") || !variable.trim.startsWith("print") || !variable.trim.startsWith("\"")) {
+      println("ledol var = " + variable)
       variableAccumulator.add(1)
     }
   }
