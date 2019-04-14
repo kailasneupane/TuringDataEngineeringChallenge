@@ -1,8 +1,10 @@
 package turing.loader
 
 
+import com.google.gson.{Gson, GsonBuilder}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
+import turing.lib.PyRepoInfo
 import turing.utils.HdfsUtils
 
 object App {
@@ -19,7 +21,7 @@ object App {
 
     // clone each repo
     //https://raw.githubusercontent.com/monikturing/turing-data-challenge/master/url_list.csv
-    //  ProcessJob.uberRepoLoader()
+    ProcessJob.uberRepoLoader()
 
     /**
       * 1st. clone each repos
@@ -29,8 +31,8 @@ object App {
     var pyStage0RepoPath = HdfsUtils.rootPath + "/" + ProcessJob.pathProperty.getProperty("pyStage0Path") + repoName
 
 
-    println(pyStage0RepoPath)
-    // ProcessJob.cloneRepoAndRetainPyFilesOnly(repoUrl)
+    println("pyStage0RepoPath => " + pyStage0RepoPath)
+    ProcessJob.cloneRepoAndRetainPyFilesOnly(repoUrl)
 
 
     /**
@@ -51,19 +53,39 @@ object App {
       * 6. Average Number of variables defined per line of code in the repository.
       */
     val pyRepoRdd: RDD[(String, String)] = sparkContext.wholeTextFiles(pyStage0RepoPath + "/*")
+    pyRepoRdd.foreach(x => println(x._1))
 
     /**
       * 1. Number of lines of code [this excludes comments, whitespaces, blank lines].
       */
-    val filteredPyLines: RDD[String] = sparkContext.textFile(pyStage0RepoPath + "/*").filter(x => !x.trim.startsWith("#") || !x.trim.isEmpty)
-    println("No. of python lines in repo. = " + filteredPyLines.count())
+    val filteredPyLines: RDD[String] = sparkContext.textFile(pyStage0RepoPath + "/*").filter(x => !(x.trim.isEmpty || x.trim.startsWith("#")))
+    val pyLinesCount = filteredPyLines.count()
+    println("No. of python lines in repo. = " + pyLinesCount)
 
     /**
       * 2. List of external libraries/packages used.
       * 5. Average number of parameters per function definition in the repository.
       * 6. Average Number of variables defined per line of code in the repository.
       */
-    ProcessJob.listOutPyImportsVarsFuncsPerRepo(pyRepoRdd)
+    val pyData = ProcessJob.listOutPyImportsVarsFuncsPerRepo(sparkContext, pyRepoRdd, repoName)
+    var librariesList = pyData.getImportsArray
+    var avgParamsPerFunctionDefinition: Double = 1.0 * pyData.getFunctionParamsCount / pyData.getFunctionsCount
+    var avgVariables: Double = 1.0 * pyData.getVariableCount / pyLinesCount
+
+    var pyRepoWholeInfo = new PyRepoInfo(
+      repoUrl,
+      pyLinesCount,
+      librariesList,
+      0.00,
+      0.99,
+      "%.6f".format(avgParamsPerFunctionDefinition).toDouble,
+      "%.6f".format(avgVariables).toDouble
+    )
+
+    println("\n\n")
+
+    val gson = new GsonBuilder().setPrettyPrinting().create()
+    println(gson.toJson(pyRepoWholeInfo))
 
     println("\n\nProcess Completed!!!")
   }

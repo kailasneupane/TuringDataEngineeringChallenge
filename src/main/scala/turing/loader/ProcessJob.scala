@@ -4,15 +4,14 @@ package turing.loader
 import java.io.File
 import java.net.URL
 import java.util.Properties
-import java.util.concurrent.atomic.LongAccumulator
 
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.commons.io.FileUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.apache.spark.util.LongAccumulator
-import parser.python3.{Python3BaseListener, Python3Lexer, Python3Parser}
+import parser.python3.{Python3Lexer, Python3Parser}
+import turing.lib.PyCodeExplorer
 import turing.utils.{HdfsUtils, PropertiesUtils}
 
 import sys.process._
@@ -47,6 +46,11 @@ object ProcessJob {
       path.listFiles.foreach(retainPyFilesOnly)
     if (path.exists && !path.getName.endsWith(".py") || path.isHidden)
       path.delete()
+
+    //because hadoop assumes underscored files should be ignored
+    if (!path.isDirectory && path.getName.startsWith("_") && path.getName.endsWith(".py")) {
+      path.renameTo(new java.io.File(path.getParent + "/i" + path.getName))
+    }
   }
 
   def cloneRepoAndRetainPyFilesOnly(url: String): Unit = {
@@ -68,31 +72,23 @@ object ProcessJob {
     println(s"Files copied from $srcPath to $destPath")
   }
 
-  def listOutPyImportsVarsFuncsPerRepo(pyRepoRdd: RDD[(String, String)]): Unit = {
-    println("list garnema chiryo :D")
-
-    // var imports: Set[String] = Set()
-    // var functionsCounter: Long = 0l
-    // var functionParamCounter: Long = 0l
-
-    var variableCounter = 0l
+  def listOutPyImportsVarsFuncsPerRepo(sparkContext: SparkContext, pyRepoRdd: RDD[(String, String)], repoName: String): PyCodeExplorer = {
+    var pyCodeExplorer = new PyCodeExplorer(sparkContext, repoName)
 
     pyRepoRdd.foreach(x => {
       var lexer = new Python3Lexer(CharStreams.fromString(x._2))
       var parser = new Python3Parser(new CommonTokenStream(lexer))
 
-
-
-      ParseTreeWalker.DEFAULT.walk(new Python3BaseListener() {
-
-        override def enterExpr_stmt(ctx: Python3Parser.Expr_stmtContext): Unit = {
-          var variable = ctx.testlist_star_expr().get(0).getText()
-          if (!variable.trim.startsWith("print")) {
-            //increase counter
-          }
-        }
-      }, parser.file_input())
+      ParseTreeWalker.DEFAULT.walk(pyCodeExplorer, parser.file_input())
     })
+
+    println("Variables count = " + pyCodeExplorer.getVariableCount)
+    println("Imports Array = " + pyCodeExplorer.getImportsArray)
+    println("functions count = " + pyCodeExplorer.getFunctionsCount)
+    println("functions parameter count = " + pyCodeExplorer.getFunctionParamsCount)
+    pyCodeExplorer
   }
 
 }
+
+

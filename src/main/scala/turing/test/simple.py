@@ -4,6 +4,10 @@ import gud,df
 import numpy as np
 from flask import request
 
+# hawa hawa comment ne cha
+    # hawa hawa comment ne cha
+ # hawa hawa comment ne cha
+
 x = 55
 y = 45;z=4
 
@@ -23,3 +27,9 @@ for x in range(0, 6):
         print(u)
     for u in range (1, 4):
             print(u)
+
+usum()
+usum()
+usum()
+
+st = usum()

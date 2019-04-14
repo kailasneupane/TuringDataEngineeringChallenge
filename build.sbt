@@ -13,6 +13,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "turing_git_analysis",
     assemblyJarName in assembly := "turing_git_analysis.jar",
+    mainClass in assembly := Some("turing.loader.App"),
     libraryDependencies += scalaTest % Test
   )
 
@@ -32,6 +33,12 @@ libraryDependencies ++= Seq(
 
 // https://mvnrepository.com/artifact/org.antlr/antlr4-runtime
 libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.7.2"
+
+// https://mvnrepository.com/artifact/io.netty/netty-buffer
+//libraryDependencies += "io.netty" % "netty-buffer" % "4.1.34.Final"
+
+// https://mvnrepository.com/artifact/com.google.code.gson/gson
+libraryDependencies += "com.google.code.gson" % "gson" % "2.8.5"
 
 
 

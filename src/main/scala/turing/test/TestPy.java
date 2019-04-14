@@ -39,8 +39,8 @@ public class TestPy {
              */
             @Override
             public void enterFuncdef(Python3Parser.FuncdefContext ctx) {
-               // System.out.printf("Function Name = %s\n", ctx.NAME().getText());
-               // System.out.printf("Function Parameter = %s\n", ctx.parameters().getText());
+              // System.out.printf("Function Name = %s\n", ctx.NAME().getText());
+              // System.out.printf("Function Parameter = %s\n", ctx.parameters().getText());
             }
 
             /**
@@ -50,7 +50,10 @@ public class TestPy {
              */
             @Override
             public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
-                System.out.println("variable: " + ctx.testlist_star_expr().get(0).getText());
+                String variable = ctx.testlist_star_expr().get(0).getText();
+                //System.out.println("variable: " + ctx.testlist_star_expr().get(0).getText());
+               if(!variable.endsWith(")"))
+                   System.out.println(variable);
             }
 
             //todo from here (imports)
