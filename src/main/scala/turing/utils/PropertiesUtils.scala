@@ -1,20 +1,20 @@
 package turing.utils
 
-import java.io.{IOException, InputStream}
+import java.io.{IOException}
 import java.util.Properties
 
 object PropertiesUtils {
 
   def loadProperties(resourcePath: String): Properties = {
     val prop = new Properties
-    new PropertiesUtils().appendProperties(resourcePath, prop)
+    new PropertiesUtilsCls().appendProperties(resourcePath, prop)
     prop
   }
 }
 
-class PropertiesUtils {
-  private def appendProperties(fileName: String, prop: Properties): Unit = {
-    val propStream = classOf[PropertiesUtils].getClassLoader.getResourceAsStream(fileName)
+class PropertiesUtilsCls {
+  def appendProperties(fileName: String, prop: Properties): Unit = {
+    val propStream = classOf[PropertiesUtilsCls].getClassLoader.getResourceAsStream(fileName)
     try
       prop.load(propStream)
     catch {
