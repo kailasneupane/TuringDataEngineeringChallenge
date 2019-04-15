@@ -10,13 +10,9 @@ import turing.loader.ProcessJob
 object HdfsUtils {
 
   val hadoopConf = new Configuration()
-  val uri = Process("/usr/local/hadoop/bin/hdfs getconf -confKey fs.defaultFS").!!.trim
-  val hdfs = FileSystem.get(new URI(uri), hadoopConf)
-
-  def main(args: Array[String]): Unit = {
-    println(hdfs.getHomeDirectory)
-    iterateEachRepoFiles("hamms")
-  }
+  val uriFromLocal = Process("/usr/local/hadoop/bin/hdfs getconf -confKey fs.defaultFS").!!.trim
+  val uri = hadoopConf.get("fs.defaultFS")
+  val hdfs = FileSystem.get(new URI(if (uri.startsWith("file")) uriFromLocal else uri), hadoopConf)
 
   def rootPath = hdfs.getHomeDirectory.toString
 
@@ -28,17 +24,5 @@ object HdfsUtils {
     }
     hdfs.copyFromLocalFile(delSrc, true, srcPath, destPath)
   }
-
-  def iterateEachRepoFiles(repoName: String): RemoteIterator[LocatedFileStatus] = {
-    val fullPath = rootPath + "/" + ProcessJob.pathProperty.getProperty("pyStage0Path") + repoName
-    var eachPyPath: RemoteIterator[LocatedFileStatus] = hdfs.listFiles(new Path(fullPath), true)
-    //var listBuffer:ListBuffer[String] = ListBuffer()
-    // while (eachPyPath.hasNext){
-    //  listBuffer.append(eachPyPath.next().getPath.toString)
-    //}
-    //listBuffer.foreach(println)
-    eachPyPath
-  }
-
 
 }
