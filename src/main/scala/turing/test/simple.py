@@ -32,10 +32,19 @@ print("Hello World")
 for x in range(0, 6):
     for y in range (x, 6):
         print(x + y)
-    for u in range (1, 4):
+    for u in range (1, 4):            # 1|3|1|0 => 3
         print(u)
     for u in range (1, 4):
-            print(u)
+        print(u)
+        for u in range (1, 4):                      # => 3 + 2 = 5
+                    print(u)
+
+
+for x in range(0, 6):
+    for y in range (x, 6):            # 1|1|0 => 2
+        print(x + y)
+
+
 
 usum()
 usum()
