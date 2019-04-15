@@ -14,7 +14,7 @@ class DuplicateFinder(sparkContext: SparkContext) extends Serializable {
 
   def duplicateAnalysisPerFile(fileStr: String): Unit = {
     println("duplicate lines check ma chiryo")
-    val fileStrCRLF = fileStr.replaceAll("\r\n", "\n")
+    val fileStrCRLF = fileStr.replaceAll("\r\n", "\n").replaceAll("\r", "\n")
     val lines = fileStrCRLF.split("\n").filter(x => !(x.trim.startsWith("#") || x.trim.isEmpty))
     var each4lines: ListBuffer[String] = ListBuffer()
 
