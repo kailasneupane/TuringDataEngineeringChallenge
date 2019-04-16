@@ -75,7 +75,7 @@ object ProcessJob {
   }
 
   def listOutPyImportsVarsFuncsPerRepo(sparkContext: SparkContext, pyRepoRdd: RDD[(String, String)], repoName: String): (PyCodeExplorer, Double) = {
-    var pyCodeExplorer = new PyCodeExplorer(sparkContext, repoName)
+    var pyCodeExplorer = new PyCodeExplorer(sparkContext)
     var duplicateFinder = new DuplicateFinder(sparkContext)
 
     var filesCount = pyRepoRdd.count()
