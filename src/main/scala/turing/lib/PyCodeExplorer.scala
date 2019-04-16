@@ -41,9 +41,13 @@ class PyCodeExplorer(sparkContext: SparkContext, repoName: String) extends Pytho
 
   //import counter2 (may contain internal imports so, we need to filter that)
   override def enterImport_from(ctx: Python3Parser.Import_fromContext): Unit = {
-    var importName = ctx.dotted_name().getText()
-    if (!(importName.equals(repoName)  || ctx.getText.startsWith("from."))) {
-      importsAccumulator.add(importName)
+    try {
+      var importName = ctx.dotted_name().getText()
+      if (!(importName.equals(repoName) || ctx.getText.startsWith("from."))) {
+        importsAccumulator.add(importName)
+      }
+    } catch {
+      case e1: NullPointerException => ()
     }
   }
 
