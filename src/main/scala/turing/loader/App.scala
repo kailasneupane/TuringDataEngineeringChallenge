@@ -29,8 +29,10 @@ object App {
       * 1st. clone each repos
       */
     var repoUrl = "https://github.com/kevinburke/hamms"
-    var repoName = repoUrl.substring(repoUrl.lastIndexOf("/") + 1)
-    var pyStage0RepoPath = HdfsUtils.rootPath + "/" + ProcessJob.pathProperty.getProperty("pyStage0Path") + repoName
+    var urlSplit = repoUrl.split("/")
+    var repoAuthor = urlSplit(urlSplit.length - 2)
+    var repoName = urlSplit(urlSplit.length - 1)
+    var pyStage0RepoPath = HdfsUtils.rootPath + "/" + ProcessJob.pathProperty.getProperty("pyStage0Path") + repoAuthor + "/" + repoName
 
 
     println("pyStage0RepoPath => " + pyStage0RepoPath)
