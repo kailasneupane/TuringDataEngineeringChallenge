@@ -11,11 +11,9 @@ import org.apache.commons.io.FileUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import parser.python3.{Python3Lexer, Python3Parser}
-import turing.lib.{DuplicateFinder, PyCodeExplorer}
+import turing.lib.{DuplicateFinder, PyCodeExplorer, PyRepoInfo}
 import turing.utils.{HdfsUtils, PropertiesUtils}
 
-import scala.collection.immutable
-import scala.collection.mutable.ListBuffer
 import sys.process._
 
 /**
@@ -76,16 +74,25 @@ object ProcessJob {
     println(s"Files copied from $srcPath to $destPath")
   }
 
-  def listOutPyImportsVarsFuncsPerRepo(sparkContext: SparkContext, pyRepoRdd: RDD[(String, String)], repoName: String): (PyCodeExplorer, Double) = {
-    var pyCodeExplorer = new PyCodeExplorer(sparkContext)
-    var duplicateFinder = new DuplicateFinder(sparkContext)
+  def extractInfos(sparkContext: SparkContext, repoUrl: String): PyRepoInfo = {
+    val urlSplit = repoUrl.split("/")
+    val repoAuthor = urlSplit(urlSplit.length - 2)
+    val repoName = urlSplit(urlSplit.length - 1)
+    val pyStage0RepoPath = HdfsUtils.rootPath + "/" + ProcessJob.pathProperty.getProperty("pyStage0Path") + repoAuthor + "/" + repoName
 
-    var filesCount = pyRepoRdd.count()
+    val filteredPyLines: RDD[String] = sparkContext.textFile(pyStage0RepoPath + "/*").filter(x => !(x.trim.isEmpty || x.trim.startsWith("#")))
+    val pyLinesCount = filteredPyLines.count() //python lines per repo
+
+    val pyCodeExplorer = new PyCodeExplorer(sparkContext)
+    val duplicateFinder = new DuplicateFinder(sparkContext)
+
+    val pyRepoRdd: RDD[(String, String)] = sparkContext.wholeTextFiles(pyStage0RepoPath + "/*")
+    val filesCount = pyRepoRdd.count() //python fiiles count per repo
 
     pyRepoRdd.foreach(x => {
       //to get function, function params, imports, variables
-      var lexer = new Python3Lexer(CharStreams.fromString(x._2))
-      var parser = new Python3Parser(new CommonTokenStream(lexer))
+      val lexer = new Python3Lexer(CharStreams.fromString(x._2))
+      val parser = new Python3Parser(new CommonTokenStream(lexer))
       ParseTreeWalker.DEFAULT.walk(pyCodeExplorer, parser.file_input())
 
       //to get duplicate code count
@@ -93,13 +100,15 @@ object ProcessJob {
 
     })
 
-    println("Variables count = " + pyCodeExplorer.getVariableCount)
-    println("Imports Array = " + pyCodeExplorer.getImportsArray.mkString(", "))
-    println("functions count = " + pyCodeExplorer.getFunctionsCount)
-    println("functions parameter count = " + pyCodeExplorer.getFunctionParamsCount)
-    println("duplicate per repo = " + duplicateFinder.getConsecutive4LineDuplicateCount)
-    println("duplicate per file = " + 1.0 * duplicateFinder.getConsecutive4LineDuplicateCount / filesCount)
-    (pyCodeExplorer, 1.0 * duplicateFinder.getConsecutive4LineDuplicateCount / filesCount)
+    new PyRepoInfo(
+      repoUrl,
+      pyLinesCount,
+      pyCodeExplorer.getImportsArray,
+      0.36, //todo
+      "%.6f".format(1.0 * duplicateFinder.getConsecutive4LineDuplicateCount / filesCount).toDouble,
+      "%.6f".format(1.0 * pyCodeExplorer.getFunctionParamsCount / pyCodeExplorer.getFunctionsCount).toDouble,
+      "%.6f".format(1.0 * pyCodeExplorer.getVariableCount / pyLinesCount).toDouble
+    )
   }
 
 }

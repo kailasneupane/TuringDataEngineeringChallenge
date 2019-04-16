@@ -4,10 +4,7 @@ package turing.loader
 import java.time.LocalTime
 
 import com.google.gson.{Gson, GsonBuilder}
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
-import turing.lib.PyRepoInfo
-import turing.utils.HdfsUtils
 
 object App {
 
@@ -29,13 +26,7 @@ object App {
       * 1st. clone each repos
       */
     var repoUrl = "https://github.com/kevinburke/hamms"
-    var urlSplit = repoUrl.split("/")
-    var repoAuthor = urlSplit(urlSplit.length - 2)
-    var repoName = urlSplit(urlSplit.length - 1)
-    var pyStage0RepoPath = HdfsUtils.rootPath + "/" + ProcessJob.pathProperty.getProperty("pyStage0Path") + repoAuthor + "/" + repoName
 
-
-    println("pyStage0RepoPath => " + pyStage0RepoPath)
     ProcessJob.cloneRepoAndRetainPyFilesOnly(repoUrl)
 
 
@@ -56,38 +47,9 @@ object App {
       *
       * 6. Average Number of variables defined per line of code in the repository.
       */
-    val pyRepoRdd: RDD[(String, String)] = sparkContext.wholeTextFiles(pyStage0RepoPath + "/*")
-    pyRepoRdd.foreach(x => println(x._1))
 
-    /**
-      * 1. Number of lines of code [this excludes comments, whitespaces, blank lines].
-      */
-    val filteredPyLines: RDD[String] = sparkContext.textFile(pyStage0RepoPath + "/*").filter(x => !(x.trim.isEmpty || x.trim.startsWith("#")))
-    val pyLinesCount = filteredPyLines.count()
-    //println("No. of python lines in repo. = " + pyLinesCount)
+    val pyRepoWholeInfo = ProcessJob.extractInfos(sparkContext, repoUrl)
 
-    /**
-      * 2. List of external libraries/packages used.
-      * 4. Code duplication: What percentage of the code is duplicated per file.
-      * If the same 4 consecutive lines of code (disregarding blank lines, comments,
-      * etc. other non code items) appear in multiple places in a file, all the occurrences
-      * 5. Average number of parameters per function definition in the repository.
-      * 6. Average Number of variables defined per line of code in the repository.
-      */
-    val pyData = ProcessJob.listOutPyImportsVarsFuncsPerRepo(sparkContext, pyRepoRdd, repoName)
-    var librariesList = pyData._1.getImportsArray
-    var avgParamsPerFunctionDefinition: Double = 1.0 * pyData._1.getFunctionParamsCount / pyData._1.getFunctionsCount
-    var avgVariables: Double = 1.0 * pyData._1.getVariableCount / pyLinesCount
-
-    var pyRepoWholeInfo = new PyRepoInfo(
-      repoUrl,
-      pyLinesCount,
-      librariesList,
-      0.36,
-      "%.6f".format(pyData._2).toDouble,
-      "%.6f".format(avgParamsPerFunctionDefinition).toDouble,
-      "%.6f".format(avgVariables).toDouble
-    )
 
     println("\n\n")
 
