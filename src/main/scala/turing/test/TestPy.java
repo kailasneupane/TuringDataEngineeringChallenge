@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class TestPy {
 
@@ -20,10 +21,10 @@ public class TestPy {
         return new String(encoded, encoding);
     }
 
-    static String fileName = "/home/serrorist/IdeaProjects/turing_git_analysis/src/main/scala/turing/test/simple.py";
+    static String fileName = "/home/kneupane/work/projects/practice/turing_git_analysis/src/main/scala/turing/test/simple.py";
 
     public static void main(String[] args) throws IOException {
-        System.out.println("ded de ded ed");
+        //   System.out.println("ded de ded ed");
         String source = readFile(new File(fileName), Charset.forName("UTF-8"));
 
         Python3Lexer lexer = new Python3Lexer(CharStreams.fromString(source));
@@ -39,8 +40,8 @@ public class TestPy {
              */
             @Override
             public void enterFuncdef(Python3Parser.FuncdefContext ctx) {
-              // System.out.printf("Function Name = %s\n", ctx.NAME().getText());
-              // System.out.printf("Function Parameter = %s\n", ctx.parameters().getText());
+                // System.out.printf("Function Name = %s\n", ctx.NAME().getText());
+                // System.out.printf("Function Parameter = %s\n", ctx.parameters().getText());
             }
 
             /**
@@ -52,8 +53,9 @@ public class TestPy {
             public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
                 String variable = ctx.testlist_star_expr().get(0).getText();
                 //System.out.println("variable: " + ctx.testlist_star_expr().get(0).getText());
-               if(!variable.endsWith(")"))
-                   System.out.println(variable);
+                if (!variable.endsWith(")")) {
+                }
+                // System.out.println(variable);
             }
 
             //todo from here (imports)
@@ -79,18 +81,31 @@ public class TestPy {
                 //   System.out.println("import from = "+ ctx.dotted_name().getText());
             }
 
-            /**
-             * for statement
-             * @param ctx
-             */
+            //for loop1
             @Override
-            public void enterFor_stmt(Python3Parser.For_stmtContext ctx) {
-                // System.out.println(ctx.getStop().getStopIndex());
+            public void enterCompound_stmt(Python3Parser.Compound_stmtContext ctx) {
+                try {
+                    //   System.out.println("start line = " + ctx.for_stmt().getStart().getLine());
+                    //  System.out.println("start index = " + ctx.for_stmt().getStart().getCharPositionInLine());
+
+                    //  System.out.println("end line = " + ctx.for_stmt().getStop().getLine());
+
+                    int startLine = ctx.for_stmt().getStart().getLine();
+                    int startIndex = ctx.for_stmt().getStart().getCharPositionInLine();
+                    int endLine = ctx.for_stmt().getStop().getLine();
+
+                    System.out.printf("(startLine, endLine, startIndex) = (%d, %d, %d)\n", startLine, endLine, startIndex);
+                    //   System.out.printf("(endLine = %d)\n", endLine);
+
+                    System.out.println("****");
+                } catch (Exception e) {
+
+                }
             }
 
             @Override
-            public void enterComp_iter(Python3Parser.Comp_iterContext ctx) {
-               // System.out.println("ii = " + ctx.comp_for().ASYNC().getText());
+            public void enterAsync_funcdef(Python3Parser.Async_funcdefContext ctx) {
+                System.out.println();
             }
         }, parser.file_input());
 
