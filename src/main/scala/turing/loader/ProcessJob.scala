@@ -57,18 +57,20 @@ object ProcessJob {
 
   def cloneRepoAndRetainPyFilesOnly(url: String): Unit = {
     val cloningPathLocal: String = pathProperty.getProperty("pyLocalPath")
-    val repoName = url.substring(url.lastIndexOf("/") + 1)
-    val cloneDirectory = new java.io.File(cloningPathLocal + "/" + repoName)
+    val urlSplit = url.split("/")
+    val repoAuthor = urlSplit(urlSplit.length - 2)
+    val repoName = urlSplit(urlSplit.length - 1)
+    val cloneDirectory = new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName)
 
     FileUtils.deleteDirectory(cloneDirectory)
 
-    s"git clone $url $cloningPathLocal$repoName --branch master --single-branch" !
+    s"git clone $url $cloningPathLocal$repoAuthor/$repoName --branch master --single-branch" !
 
-    retainPyFilesOnly(new java.io.File(cloningPathLocal + "/" + repoName))
-    println(s"git clone $repoName successful and only .py files retained.")
+    retainPyFilesOnly(new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName))
+    println(s"git clone $repoAuthor/$repoName successful and only .py files retained.")
 
-    val srcPath = cloningPathLocal + repoName
-    val destPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("pyStage0Path") + "/" + repoName
+    val srcPath = cloningPathLocal + repoAuthor + "/" + repoName
+    val destPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("pyStage0Path") + repoAuthor + "/" + repoName
     HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
 
     println(s"Files copied from $srcPath to $destPath")
