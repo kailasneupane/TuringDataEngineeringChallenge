@@ -23,14 +23,15 @@ object App {
 
   def main(args: Array[String]): Unit = {
 
+    val uberRepoHadoopPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("uberRepoRawPath") + "*"
     val gson = new GsonBuilder().setPrettyPrinting().create()
-    val reposList = sparkContext.textFile(HdfsUtils.rootPath + "/" + pathProperty.getProperty("uberRepoRawPath") + "*").collect().toList
     val pyRepoInfoList: ListBuffer[PyRepoInfo] = ListBuffer()
 
-
+    println("Loading uber repo")
     ProcessJob.uberRepoLoader()
 
-    reposList.filter(x => x.startsWith("https://")).foreach(repoUrl => {
+    sparkContext.textFile(uberRepoHadoopPath).collect().toList
+      .filter(x => x.startsWith("https://")).foreach(repoUrl => {
 
 
       /**
