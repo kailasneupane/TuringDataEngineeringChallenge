@@ -1,13 +1,14 @@
 package turing.loader
 
 
-import java.io.File
+import java.io.{File, FileNotFoundException}
 import java.net.URL
 import java.util.Properties
 
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.commons.io.FileUtils
+import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import parser.python3.{Python3Lexer, Python3Parser}
@@ -65,12 +66,18 @@ object ProcessJob {
     s"git clone $url $cloningPathLocal$repoAuthor/$repoName --branch master --single-branch" !
 
     retainPyFilesOnly(new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName))
-    println(s"git clone $repoAuthor/$repoName successful and only .py files retained.")
 
     val srcPath = cloningPathLocal + repoAuthor + "/" + repoName
     val destPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("pyStage0Path") + repoAuthor + "/" + repoName
-    HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
-
+    try {
+      HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
+    } catch {
+      case e1: FileNotFoundException => {
+        println("Unable to clone from " + url)
+        HdfsUtils.hdfs.create(new Path(destPath + "/" + "empty_file.py"), true)
+      }
+    }
+    println(s"git clone $repoAuthor/$repoName successful and only .py files retained.")
     println(s"Files copied from $srcPath to $destPath")
   }
 
