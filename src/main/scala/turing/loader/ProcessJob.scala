@@ -35,8 +35,8 @@ object ProcessJob {
     println("fileName " + fileName)
     println(s"Loading uber repo from $url")
 
-    Process(s"mkdir -p $localPath").!
-    new URL(url) #> new File(localPathFile) !!
+    //    Process(s"mkdir -p $localPath").!
+    //    new URL(url) #> new File(localPathFile) !!
 
     HdfsUtils.copyPyFilesFromLocalToHdfs(localPathFile, hadoopPath, false)
     println(s"uber repo loaded in $hadoopPath")
@@ -107,14 +107,20 @@ object ProcessJob {
 
     })
 
+
+    val nesting_factor = 0.36
+    val code_duplication = "%.6f".format(1.0 * duplicateFinder.getConsecutive4LineDuplicateCount / filesCount).toDouble
+    val average_parameters = "%.6f".format(1.0 * pyCodeExplorer.getFunctionParamsCount / pyCodeExplorer.getFunctionsCount).toDouble
+    val average_variables = "%.6f".format(1.0 * pyCodeExplorer.getVariableCount / pyLinesCount).toDouble
+//https://github.com/vuvova/gdb-tools
     new PyRepoInfo(
       repoUrl,
       pyLinesCount,
       pyCodeExplorer.getImportsArray,
-      0.36, //todo
-      "%.6f".format(1.0 * duplicateFinder.getConsecutive4LineDuplicateCount / filesCount).toDouble,
-      "%.6f".format(1.0 * pyCodeExplorer.getFunctionParamsCount / pyCodeExplorer.getFunctionsCount).toDouble,
-      "%.6f".format(1.0 * pyCodeExplorer.getVariableCount / pyLinesCount).toDouble
+      nesting_factor, //todo
+      if (code_duplication == Double.NaN) 0.0d else code_duplication, //todo
+      if (average_parameters == Double.NaN) 0.0d else average_parameters, //todo
+      if (average_variables == Double.NaN) 0.0d else average_variables //todo
     )
   }
 
