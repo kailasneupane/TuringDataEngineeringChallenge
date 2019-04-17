@@ -17,7 +17,7 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
 
   def getVariableCount = variableAccumulator.value
 
-  def getImportsArray = importsAccumulator.value.toArray.filter(x => !defaultPyImportsList.contains(x))
+  def getImportsArray = importsAccumulator.value.filter(x => !defaultPyImportsList.contains(x)).toArray
 
   def getFunctionsCount = functionAccumulator.value
 
