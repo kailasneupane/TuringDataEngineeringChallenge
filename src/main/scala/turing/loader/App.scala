@@ -13,6 +13,8 @@ import scala.collection.mutable.ListBuffer
 
 object App {
 
+  println("Process execution started at " + LocalTime.now())
+
   val sparkConf = new SparkConf().setAppName("Practice").setMaster("local[*]")
     .set("spark.hadoop.validateOutputSpecs", "false") // to override output
     .set("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive", "true")
@@ -21,22 +23,19 @@ object App {
 
   def main(args: Array[String]): Unit = {
 
-    println("Process execution started at " + LocalTime.now())
-
-    // clone each repo
-    //https://raw.githubusercontent.com/monikturing/turing-data-challenge/master/url_list.csv
-    ProcessJob.uberRepoLoader()
-
+    val gson = new GsonBuilder().setPrettyPrinting().create()
     val reposList = sparkContext.textFile(HdfsUtils.rootPath + "/" + pathProperty.getProperty("uberRepoRawPath") + "*").collect().toList
     val pyRepoInfoList: ListBuffer[PyRepoInfo] = ListBuffer()
+
+
+    ProcessJob.uberRepoLoader()
+
     reposList.filter(x => x.startsWith("https://")).foreach(repoUrl => {
 
 
       /**
         * 1st. clone each repos
         */
-      //var repoUrl = "https://github.com/kevinburke/hamms"
-
       ProcessJob.cloneRepoAndRetainPyFilesOnly(repoUrl)
 
 
@@ -59,19 +58,21 @@ object App {
         */
 
       val pyRepoWholeInfo = ProcessJob.extractInfos(sparkContext, repoUrl)
+
+      println()
       println(new Gson().toJson(pyRepoWholeInfo))
       pyRepoInfoList += pyRepoWholeInfo
 
     })
-    println("\n\n")
 
-    val gson = new GsonBuilder().setPrettyPrinting().create()
+    sparkContext.stop()
+
     //println(gson.toJson(pyRepoInfoList.toArray))
     val outputStrJson: String = gson.toJson(pyRepoInfoList.toArray)
     val finalOutput = HdfsUtils.rootPath + "/" + pathProperty.getProperty("resultJsonFullPath")
     HdfsUtils.saveTextStrToHdfs(outputStrJson, finalOutput)
 
-    println("\n\nProcess Completed!!!\n")
+    println("\nProcess Completed!!!\n")
 
     println("Process execution completed at " + LocalTime.now())
   }
