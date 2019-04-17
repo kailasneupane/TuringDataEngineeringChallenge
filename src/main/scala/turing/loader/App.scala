@@ -29,7 +29,7 @@ object App {
 
     val reposList = sparkContext.textFile(HdfsUtils.rootPath + "/" + pathProperty.getProperty("uberRepoRawPath") + "*").collect().toList
     val pyRepoInfoList: ListBuffer[PyRepoInfo] = ListBuffer()
-    reposList.drop(0).foreach(repoUrl => {
+    reposList.filter(x => x.startsWith("https://")).foreach(repoUrl => {
 
 
       /**
@@ -59,7 +59,7 @@ object App {
         */
 
       val pyRepoWholeInfo = ProcessJob.extractInfos(sparkContext, repoUrl)
-
+      println(new Gson().toJson(pyRepoWholeInfo))
       pyRepoInfoList += pyRepoWholeInfo
 
     })
