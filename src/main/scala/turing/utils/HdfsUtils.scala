@@ -25,4 +25,10 @@ object HdfsUtils {
     hdfs.copyFromLocalFile(delSrc, true, srcPath, destPath)
   }
 
+  def saveTextStrToHdfs(content: String, filePath: String): Unit = {
+    val outputFile = hdfs.create(new Path(filePath))
+    outputFile.write(content.getBytes("UTF-8"))
+    outputFile.close()
+  }
+
 }

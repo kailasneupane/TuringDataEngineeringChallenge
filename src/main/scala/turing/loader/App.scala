@@ -66,7 +66,10 @@ object App {
     println("\n\n")
 
     val gson = new GsonBuilder().setPrettyPrinting().create()
-    println(gson.toJson(pyRepoInfoList.toArray))
+    //println(gson.toJson(pyRepoInfoList.toArray))
+    val outputStrJson: String = gson.toJson(pyRepoInfoList.toArray)
+    val finalOutput = HdfsUtils.rootPath + "/" + pathProperty.getProperty("resultJsonFullPath")
+    HdfsUtils.saveTextStrToHdfs(outputStrJson, finalOutput)
 
     println("\n\nProcess Completed!!!\n")
 

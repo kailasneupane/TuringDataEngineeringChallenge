@@ -9,3 +9,5 @@ pyLocalPath = output/repos/
 #hadoop paths
 uberRepoRawPath = raw/uber_repo/
 pyStage0Path = stage0/repos/
+
+resultJsonFullPath =  stage1/repos_info/results.json
