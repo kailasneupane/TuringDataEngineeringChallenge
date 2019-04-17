@@ -4,8 +4,7 @@ import java.net.URI
 
 import sys.process._
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, LocatedFileStatus, Path, RemoteIterator}
-import turing.loader.ProcessJob
+import org.apache.hadoop.fs.{FileSystem, Path}
 
 object HdfsUtils {
 
