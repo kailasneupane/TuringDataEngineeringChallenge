@@ -22,7 +22,7 @@ public class TestPy {
         return new String(encoded, encoding);
     }
 
-    static String fileName = "/home/serrorist/IdeaProjects/turing_git_analysis/src/main/scala/turing/test/simple.py";
+    static String fileName = "/home/kneupane/work/projects/practice/turing_git_analysis/src/main/scala/turing/test/simple.py";
 
 
     static String parens = "";
@@ -116,38 +116,7 @@ public class TestPy {
 
         }, parser.file_input());
 
-        loopCounter(list);
-
-    }
-
-    private static void loopCounter(ArrayList<String> listArr) {
-        ArrayList<String> newList = listArr;
-
-        for (int i = 0; i < listArr.size() - 1; i++) {
-            for (int j = listArr.size() - 1; j >= 1; j--) {
-                if (listArr.get(i).equals("(")) {
-                    continue;
-                }
-                if (i!=j && listArr.get(i).equals(listArr.get(j))) {
-                    newList.set(j, listArr.get(j) + newList.get(i));
-                    newList.set(i, "");
-                    System.out.println("equal "+ listArr.get(i));
-                }
-            }
-        }
-
-        System.out.println("\n\n new list");
-        StringBuilder str = new StringBuilder("");
-        for (int i = 0; i < newList.size(); i++) {
-            System.out.println(newList.get(i));
-            str.append(newList.get(i));
-        }
-
-        System.out.println("***");
-        parens = str.toString().replaceAll("\n", "").replaceAll("[0-9]", "");
-        System.out.println(parens);
-
-        System.out.println(maxDepth(parens));
+        System.out.println("loop counter = " + maxDepth("(1(34)(5(78)8)8)(1115)"));
     }
 
     static int maxDepth(String S) {
@@ -179,5 +148,50 @@ public class TestPy {
         }
 
         return max;
+    }
+
+    static int lastParenthesis(String expression, int index) {
+        int i;
+
+        // If index given is invalid and is
+        // not an opening bracket.
+        if (expression.charAt(index) != '(') {
+            System.out.print(expression + ", "
+                    + index + ": -1\n");
+            return index;
+        }
+
+        // Stack to store opening brackets.
+        Stack<Integer> st = new Stack<>();
+
+        // Traverse through string starting from
+        // given index.
+        for (i = index; i < expression.length(); i++) {
+
+            // If current character is an
+            // opening bracket push it in stack.
+            if (expression.charAt(i) == '(') {
+                st.push((int) expression.charAt(i));
+            } // If current character is a closing
+            // bracket, pop from stack. If stack
+            // is empty, then this closing
+            // bracket is required bracket.
+            else if (expression.charAt(i) == ')') {
+                st.pop();
+                if (st.empty()) {
+                    System.out.print(expression + ", "
+                            + index + ": " + i + "\n");
+                    return i;
+                }
+            }
+        }
+
+        // If no matching closing bracket
+        // is found.
+        System.out.print(expression + ", "
+                + index + ": -1\n");
+
+        return -1;
+
     }
 }
