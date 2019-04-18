@@ -1,6 +1,7 @@
 package turing.lib
 
 import org.apache.spark.SparkContext
+import org.apache.spark.util.CollectionAccumulator
 import parser.python3.{Python3BaseListener, Python3Parser}
 
 class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener with Serializable {
@@ -9,11 +10,14 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
   //default libs taken from https://docs.python.org/3/py-modindex.html#cap-z
   private var defaultPyImportsList = List("__future__", "__main__", "_dummy_thread", "_thread", "abc", "aifc", "argparse", "array", "ast", "asynchat", "asyncio", "asyncore", "atexit", "audioop", "bdb", "binascii", "binhex", "bisect", "builtins", "bz2", "calendar", "cgi", "cgitb", "chunk", "cmath", "cmd", "code", "codecs", "codeop", "collections", "colorsys", "compileall", "concurrent", "configparser", "contextlib", "contextvars", "copy", "copyreg", "cProfile", "crypt", "csv", "ctypes", "curses", "dataclasses", "datetime", "dbm", "decimal", "difflib", "dis", "distutils", "doctest", "dummy_threading", "email", "encodings", "ensurepip", "enum", "errno", "faulthandler", "fcntl", "filecmp", "fileinput", "fnmatch", "formatter", "fractions", "ftplib", "functools", "gc", "getopt", "getpass", "gettext", "glob", "grp", "gzip", "hashlib", "heapq", "hmac", "html", "http", "imaplib", "imghdr", "imp", "importlib", "inspect", "io", "ipaddress", "itertools", "json", "keyword", "lib2to3", "linecache", "locale", "logging", "lzma", "macpath", "mailbox", "mailcap", "marshal", "math", "mimetypes", "mmap", "modulefinder", "msilib", "msvcrt", "multiprocessing", "netrc", "nis", "nntplib", "numbers", "operator", "optparse", "os", "ossaudiodev", "parser", "pathlib", "pdb", "pickle", "pickletools", "pipes", "pkgutil", "platform", "plistlib", "poplib", "posix", "pprint", "profile", "pstats", "pty", "pwd", "py_compile", "pyclbr", "pydoc", "queue", "quopri", "random", "re", "readline", "reprlib", "resource", "rlcompleter", "runpy", "sched", "secrets", "select", "selectors", "shelve", "shlex", "shutil", "signal", "site", "smtpd", "smtplib", "sndhdr", "socket", "socketserver", "spwd", "sqlite3", "ssl", "stat", "statistics", "string", "stringprep", "struct", "subprocess", "sunau", "symbol", "symtable", "sys", "sysconfig", "syslog", "tabnanny", "tarfile", "telnetlib", "tempfile", "termios", "test", "textwrap", "threading", "time", "timeit", "tkinter", "token", "tokenize", "trace", "traceback", "tracemalloc", "tty", "turtle", "turtledemo", "types", "typing", "unicodedata", "unittest", "urllib", "uu", "uuid", "venv", "warnings", "wave", "weakref", "webbrowser", "winreg", "winsound", "wsgiref", "xdrlib", "xml", "xmlrpc", "zipapp", "zipfile", "zipimport", "zlib")
 
+  private var forLoopParenthesisAccumulator: CollectionAccumulator[String] = sparkContext.collectionAccumulator[String]("for loops parenthesis conversion accumulator")
   private var variableAccumulator = sparkContext.longAccumulator("variables accumulator")
   private var functionAccumulator = sparkContext.longAccumulator("functions accumulator")
   private var functionParamsAccumulator = sparkContext.longAccumulator("functions parameters accumulator")
   private var importsAccumulator = new SetAccumulator[String]()
   sparkContext.register(importsAccumulator, "imports accumulator")
+
+  def getForLoopParenthesisStr = forLoopParenthesisAccumulator.value.toArray.mkString("")
 
   def getVariableCount = variableAccumulator.value
 
@@ -62,5 +66,26 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
       functionParamsAccumulator.add(params.length)
     }
     functionAccumulator.add(1)
+  }
+
+  override def enterCompound_stmt(ctx: Python3Parser.Compound_stmtContext): Unit = {
+    try {
+      val startLine = ctx.for_stmt.getStart.getLine
+      //val startIndex = ctx.for_stmt.getStart.getCharPositionInLine
+      //val endLine = ctx.for_stmt.getStop.getLine
+      // println(ctx.for_stmt().getText)
+      forLoopParenthesisAccumulator.add("(")
+    } catch {
+      case e1: NullPointerException => ()
+    }
+  }
+
+  override def exitCompound_stmt(ctx: Python3Parser.Compound_stmtContext): Unit = {
+    try {
+      val endLine = ctx.for_stmt.getStop.getLine
+      forLoopParenthesisAccumulator.add(")")
+    } catch {
+      case e1: NullPointerException => ()
+    }
   }
 }

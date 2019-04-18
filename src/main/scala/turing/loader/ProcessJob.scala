@@ -13,7 +13,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import parser.python3.{Python3Lexer, Python3Parser}
 import turing.lib.{DuplicateFinder, PyCodeExplorer, PyRepoInfo}
-import turing.utils.{HdfsUtils, PropertiesUtils}
+import turing.utils.{HdfsUtils, PropertiesUtils, StringUtils}
 
 import sys.process._
 
@@ -107,12 +107,13 @@ object ProcessJob {
 
     })
 
+    println("For loop into parenthesis = " + pyCodeExplorer.getForLoopParenthesisStr)
 
-    val nesting_factor = 0.36 //TODO
+    val nesting_factor = "%.6f".format(StringUtils.getNestingFactor(pyCodeExplorer.getForLoopParenthesisStr)).toDouble
     val code_duplication = "%.6f".format(1.0 * duplicateFinder.getConsecutive4LineDuplicateCount / filesCount).toDouble
     val average_parameters = "%.6f".format(1.0 * pyCodeExplorer.getFunctionParamsCount / pyCodeExplorer.getFunctionsCount).toDouble
     val average_variables = "%.6f".format(1.0 * pyCodeExplorer.getVariableCount / pyLinesCount).toDouble
-    //https://github.com/vuvova/gdb-tools
+
     new PyRepoInfo(
       repoUrl,
       pyLinesCount,
@@ -125,7 +126,3 @@ object ProcessJob {
   }
 
 }
-
-
-
-
