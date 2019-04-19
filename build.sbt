@@ -40,6 +40,8 @@ libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.7.2"
 // https://mvnrepository.com/artifact/com.google.code.gson/gson
 libraryDependencies += "com.google.code.gson" % "gson" % "2.8.5"
 
+// https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit
+libraryDependencies += "org.eclipse.jgit" % "org.eclipse.jgit" % "5.3.0.201903130848-r"
 
 
 mainClass in(Compile, run) := Some("turing.loader.App")

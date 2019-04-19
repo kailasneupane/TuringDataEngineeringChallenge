@@ -1,6 +1,5 @@
 package turing.loader
 
-
 import java.io.{File, FileNotFoundException}
 import java.net.URL
 import java.util.Properties
@@ -8,9 +7,10 @@ import java.util.Properties
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.commons.io.FileUtils
-import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
+import org.eclipse.jgit.api.errors.TransportException
+import org.eclipse.jgit.api.Git
 import parser.python3.{Python3Lexer, Python3Parser}
 import turing.lib.{DuplicateFinder, PyCodeExplorer, PyRepoInfo}
 import turing.utils.{HdfsUtils, PropertiesUtils, StringUtils}
@@ -60,21 +60,40 @@ object ProcessJob {
     val repoAuthor = urlSplit(urlSplit.length - 2)
     val repoName = urlSplit(urlSplit.length - 1)
     val cloneDirectory = new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName)
+    val srcPath = cloningPathLocal + repoAuthor + "/" + repoName
+    val destPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("pyStage0Path") + repoAuthor + "/" + repoName
 
     FileUtils.deleteDirectory(cloneDirectory)
 
-    s"git clone $url $cloningPathLocal$repoAuthor/$repoName --branch master --single-branch" !
+    //s"git clone $url $cloningPathLocal$repoAuthor/$repoName --branch master --single-branch" !
+    try {
+      Git.cloneRepository().setURI(url)
+        .setBranch("master")
+        .setDirectory(cloneDirectory)
+        .call()
+    } catch {
+      case e1: TransportException => {
+        println(s"Repo $url not available !!!")
+        s"mkdir -p $cloningPathLocal$repoAuthor/$repoName" !!
 
+        s"touch $cloningPathLocal$repoAuthor/$repoName/dummy.py" !!
+
+        // HdfsUtils.hdfs.create(new Path(destPath + "/" + "dummy.py"), true)
+      }
+    }
     retainPyFilesOnly(new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName))
 
-    val srcPath = cloningPathLocal + repoAuthor + "/" + repoName
-    val destPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("pyStage0Path") + repoAuthor + "/" + repoName
     try {
       HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
     } catch {
       case e1: FileNotFoundException => {
         println("Unable to clone from " + url)
-        HdfsUtils.hdfs.create(new Path(destPath + "/" + "empty_file.py"), true)
+        Git.cloneRepository().setURI(url)
+          .setDirectory(cloneDirectory)
+          .call()
+        //  HdfsUtils.hdfs.create(new Path(destPath + "/" + "empty_file.py"), true)
+        retainPyFilesOnly(new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName))
+        HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
       }
     }
     println(s"git clone $repoAuthor/$repoName successful and only .py files retained.")
