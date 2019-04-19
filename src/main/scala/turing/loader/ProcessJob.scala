@@ -74,10 +74,8 @@ object ProcessJob {
     } catch {
       case e1: TransportException => {
         println(s"Repo $url not available !!!")
-        s"mkdir -p $cloningPathLocal$repoAuthor/$repoName" !!
-
-        s"touch $cloningPathLocal$repoAuthor/$repoName/dummy.py" !!
-
+        new File(s"$cloningPathLocal$repoAuthor/$repoName").mkdirs()
+        new File(s"$cloningPathLocal$repoAuthor/$repoName/dummy.py").createNewFile()
         // HdfsUtils.hdfs.create(new Path(destPath + "/" + "dummy.py"), true)
       }
     }

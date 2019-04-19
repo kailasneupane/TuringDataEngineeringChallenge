@@ -13,6 +13,7 @@ import scala.collection.mutable.ListBuffer
 
 object App {
 
+  val startTime = System.nanoTime()
   println("Process execution started at " + LocalTime.now())
 
   val sparkConf = new SparkConf().setAppName("Practice").setMaster("local[*]")
@@ -61,21 +62,23 @@ object App {
       val pyRepoWholeInfo = ProcessJob.extractInfos(sparkContext, repoUrl)
 
       println()
-      println(new Gson().toJson(pyRepoWholeInfo))
+      println(gson.toJson(pyRepoWholeInfo))
+      println()
       pyRepoInfoList += pyRepoWholeInfo
 
     })
 
     sparkContext.stop()
 
-    //println(gson.toJson(pyRepoInfoList.toArray))
     val outputStrJson: String = gson.toJson(pyRepoInfoList.toArray)
     val finalOutput = HdfsUtils.rootPath + "/" + pathProperty.getProperty("resultJsonFullPath")
     HdfsUtils.saveTextStrToHdfs(outputStrJson, finalOutput)
 
-    println("\nProcess Completed!!!\n")
-
     println("Process execution completed at " + LocalTime.now())
+    val timeTakenInMinutes = (System.nanoTime() - startTime) / 1000000000 / 60
+    printf("Total time taken: %.2f minutes.\n", timeTakenInMinutes)
+    println("\nPlease find results.json in hadoop path: \n" + finalOutput + "\n")
+
   }
 
 }
