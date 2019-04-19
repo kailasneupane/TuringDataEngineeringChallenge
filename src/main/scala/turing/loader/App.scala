@@ -75,7 +75,7 @@ object App {
     HdfsUtils.saveTextStrToHdfs(outputStrJson, finalOutput)
 
     println("Process execution completed at " + LocalTime.now())
-    val timeTakenInMinutes = (System.nanoTime() - startTime) / 1000000000 / 60
+    val timeTakenInMinutes = 1.0 * (System.nanoTime() - startTime) / 1000000000 / 60
     printf("Total time taken: %.2f minutes.\n", timeTakenInMinutes)
     println("\nPlease find results.json in hadoop path: \n" + finalOutput + "\n")
 
