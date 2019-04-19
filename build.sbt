@@ -25,24 +25,32 @@ assemblyMergeStrategy in assembly := {
 val sparkVersion = "2.3.0"
 
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % sparkVersion,
-  "org.apache.hadoop" % "hadoop-common" % "2.6.0",
-  "org.apache.commons" % "commons-io" % "1.3.2",
-  "org.apache.hadoop" % "hadoop-hdfs" % "2.6.0"
+ // "org.apache.spark" %% "spark-core" % sparkVersion
+ // "org.apache.hadoop" % "hadoop-common" % "2.6.0",
+ // "org.apache.commons" % "commons-io" % "1.3.2",
+ // "org.apache.hadoop" % "hadoop-hdfs" % "2.6.0"
 )
+
+// https://mvnrepository.com/artifact/org.apache.spark/spark-core
+libraryDependencies += "org.apache.spark" %% "spark-core" % "2.3.0"
+
 
 // https://mvnrepository.com/artifact/org.antlr/antlr4-runtime
 libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.7.2"
 
-// https://mvnrepository.com/artifact/io.netty/netty-buffer
-//libraryDependencies += "io.netty" % "netty-buffer" % "4.1.34.Final"
-
 // https://mvnrepository.com/artifact/com.google.code.gson/gson
-libraryDependencies += "com.google.code.gson" % "gson" % "2.8.5"
+//libraryDependencies += "com.google.code.gson" % "gson" % "2.8.5"
 
 // https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit
 libraryDependencies += "org.eclipse.jgit" % "org.eclipse.jgit" % "5.3.0.201903130848-r"
 
+dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.7.8"
+dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.8"
+dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.7.8"
+
+assemblyShadeRules in assembly := Seq(
+  ShadeRule.rename("io.netty.**" -> "shadenetty.@1").inAll
+)
 
 mainClass in(Compile, run) := Some("turing.loader.App")
 
