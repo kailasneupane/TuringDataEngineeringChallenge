@@ -7,14 +7,13 @@ import java.util.Properties
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.commons.io.FileUtils
-import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.eclipse.jgit.api.errors.TransportException
-import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.{CloneCommand, Git}
 import parser.python3.{Python3Lexer, Python3Parser}
 import turing.lib.{DuplicateFinder, PyCodeExplorer, PyRepoInfo}
-import turing.utils.{HdfsUtils, StringUtils}
+import turing.utils.{HdfsUtils, LocalfsUtils, StringUtils}
 import javautils.PropertiesUtils
 
 import sys.process._
@@ -45,6 +44,7 @@ object ProcessJob {
   }
 
   def retainPyFilesOnly(path: java.io.File): Unit = {
+    println("Inside retain py files")
     if (path.isDirectory)
       path.listFiles.foreach(retainPyFilesOnly)
     if ((path.exists && !path.getName.endsWith(".py")) || (path.isHidden || path.getName.startsWith("."))) {
@@ -62,52 +62,37 @@ object ProcessJob {
     val urlSplit = url.split("/")
     val repoAuthor = urlSplit(urlSplit.length - 2)
     val repoName = urlSplit(urlSplit.length - 1)
-    val cloneDirectory = new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName)
     val srcPath = cloningPathLocal + repoAuthor + "/" + repoName
+    val cloneDirectory = new java.io.File(srcPath)
     val destPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("pyStage0Path") + repoAuthor + "/" + repoName
 
     FileUtils.deleteDirectory(cloneDirectory)
 
     //s"git clone $url $cloningPathLocal$repoAuthor/$repoName --branch master --single-branch" !
+    val cloneCommandMaster: CloneCommand = Git.cloneRepository.setURI(url).setDirectory(cloneDirectory).setBranch("master")
+    val cloneCommandDefault: CloneCommand = Git.cloneRepository.setURI(url).setDirectory(cloneDirectory)
     try {
-      Git.cloneRepository().setURI(url)
-        .setBranch("master")
-        .setDirectory(cloneDirectory)
-        .call()
-    } catch {
-      case e1: TransportException => {
-        println(s"Repo $url not available !!!")
-        println("TransportException ma chiryo. It means repo is not publicly available.")
-        new File(s"$cloningPathLocal$repoAuthor/$repoName").mkdirs()
-        new File(s"$cloningPathLocal$repoAuthor/$repoName/dummy.py").createNewFile()
-        // HdfsUtils.hdfs.create(new Path(destPath + "/" + "dummy.py"), true)
-      }
-    }
-    retainPyFilesOnly(new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName))
-
-    try {
-      HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
-    } catch {
-      case e1: FileNotFoundException => {
-        println("Unable to clone from " + url)
-        println("1st FileNotFound ma chiryo. Reason may be master branch is empty or not available. so cloning again with default branch")
-        Git.cloneRepository().setURI(url)
-          .setDirectory(cloneDirectory)
-          .call()
-        //  HdfsUtils.hdfs.create(new Path(destPath + "/" + "empty_file.py"), true)
-        retainPyFilesOnly(new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName))
-        try {
-          HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
-        } catch {
-          case e1: FileNotFoundException => {
-            println("2nd FileNotFound ma chiryo. Reason may be still default branch is empty.")
-            HdfsUtils.hdfs.create(new Path(destPath + "/" + "dummy.py"), true)
-          }
+      println(s"loading files from $url")
+      cloneCommandMaster.call().getRepository.close
+      if (!LocalfsUtils.retainPyFilesOnly(srcPath)) {
+        println(s"Loading $url with py files in it is unsuccesfull !!! Retrying with default branch.")
+        cloneCommandDefault.call().getRepository.close
+        if (!LocalfsUtils.retainPyFilesOnly(srcPath)) {
+          println("Seems to be a repo without py files in it !!!")
+          FileUtils.deleteDirectory(cloneDirectory)
+          cloneDirectory.mkdirs()
+          new File(srcPath + "/dummy.py").createNewFile()
         }
       }
+    } catch {
+      case e: TransportException => {
+        println("Loading files unsuccesfull !!!\nSeems like repo doesn't exists or it is a private repo.")
+        FileUtils.deleteDirectory(cloneDirectory)
+        cloneDirectory.mkdirs()
+        new File(srcPath + "/dummy.py").createNewFile()
+      }
     }
-    println(s"git clone $repoAuthor/$repoName successful and only .py files retained.")
-    println(s"Files copied from $srcPath to $destPath")
+    HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
   }
 
   def extractInfos(sparkContext: SparkContext, repoUrl: String): PyRepoInfo = {
