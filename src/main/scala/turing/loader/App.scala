@@ -90,7 +90,7 @@ object App {
 
     println("Process execution completed at " + LocalTime.now())
     val timeTakenInSecond = 1.0 * (System.nanoTime() - startTime) / 1000000000
-    printf("Total time taken: %.2f minutes.\n", timeTakenInSecond)
+    printf("Total time taken: %.2f seconds.\n", timeTakenInSecond)
     println("\nPlease find results.json in hadoop path: \n" + finalOutput + "\n")
 
   }
