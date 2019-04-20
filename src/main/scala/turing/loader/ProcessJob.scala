@@ -43,19 +43,6 @@ object ProcessJob {
     println(s"uber repo loaded in $hadoopPath")
   }
 
-  def retainPyFilesOnly(path: java.io.File): Unit = {
-    println("Inside retain py files")
-    if (path.isDirectory)
-      path.listFiles.foreach(retainPyFilesOnly)
-    if ((path.exists && !path.getName.endsWith(".py")) || (path.isHidden || path.getName.startsWith("."))) {
-      path.delete()
-    }
-
-    //because hadoop assumes underscored files should be ignored
-    if (!path.isDirectory && path.getName.startsWith("_") && path.getName.endsWith(".py")) {
-      path.renameTo(new java.io.File(path.getParent + "/i" + path.getName))
-    }
-  }
 
   def cloneRepoAndRetainPyFilesOnly(url: String): Unit = {
     val cloningPathLocal: String = pathProperty.getProperty("pyLocalPath")
