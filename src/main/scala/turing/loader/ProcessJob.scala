@@ -37,18 +37,19 @@ object ProcessJob {
     println("fileName " + fileName)
     println(s"Loading uber repo from $url")
 
-    Process(s"mkdir -p $localPath").!
+    new File(localPath).mkdirs()
     new URL(url) #> new File(localPathFile) !!
 
     HdfsUtils.copyPyFilesFromLocalToHdfs(localPathFile, hadoopPath, false)
     println(s"uber repo loaded in $hadoopPath")
   }
 
-  private def retainPyFilesOnly(path: java.io.File): Unit = {
+  def retainPyFilesOnly(path: java.io.File): Unit = {
     if (path.isDirectory)
       path.listFiles.foreach(retainPyFilesOnly)
-    if (path.exists && !path.getName.endsWith(".py") || path.isHidden)
+    if ((path.exists && !path.getName.endsWith(".py")) || (path.isHidden || path.getName.startsWith("."))) {
       path.delete()
+    }
 
     //because hadoop assumes underscored files should be ignored
     if (!path.isDirectory && path.getName.startsWith("_") && path.getName.endsWith(".py")) {
@@ -76,6 +77,7 @@ object ProcessJob {
     } catch {
       case e1: TransportException => {
         println(s"Repo $url not available !!!")
+        println("TransportException ma chiryo. It means repo is not publicly available.")
         new File(s"$cloningPathLocal$repoAuthor/$repoName").mkdirs()
         new File(s"$cloningPathLocal$repoAuthor/$repoName/dummy.py").createNewFile()
         // HdfsUtils.hdfs.create(new Path(destPath + "/" + "dummy.py"), true)
@@ -88,6 +90,7 @@ object ProcessJob {
     } catch {
       case e1: FileNotFoundException => {
         println("Unable to clone from " + url)
+        println("1st FileNotFound ma chiryo. Reason may be master branch is empty or not available. so cloning again with default branch")
         Git.cloneRepository().setURI(url)
           .setDirectory(cloneDirectory)
           .call()
@@ -97,6 +100,7 @@ object ProcessJob {
           HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
         } catch {
           case e1: FileNotFoundException => {
+            println("2nd FileNotFound ma chiryo. Reason may be still default branch is empty.")
             HdfsUtils.hdfs.create(new Path(destPath + "/" + "dummy.py"), true)
           }
         }
