@@ -11,7 +11,6 @@ object LocalfsUtils {
 
   def retainPyFilesOnly(repoPath: String): Boolean = {
     getRecursiveListOfFiles(new File(repoPath)).reverse.foreach(path => {
-      println(path.getPath)
       if (!path.getName.endsWith(".py"))
         path.delete()
       if (path.getName.startsWith("_"))
