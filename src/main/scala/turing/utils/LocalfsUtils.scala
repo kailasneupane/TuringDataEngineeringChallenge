@@ -2,6 +2,8 @@ package turing.utils
 
 import java.io.File
 
+import org.apache.commons.io.FileUtils
+
 object LocalfsUtils {
 
   def getRecursiveListOfFiles(dir: File): Array[File] = {
@@ -15,6 +17,13 @@ object LocalfsUtils {
         path.delete()
       if (path.getName.startsWith("_"))
         path.renameTo(new File(path.getParent + "/i" + path.getName))
+      if (!path.isDirectory && path.getPath.contains(":")) {
+        path.renameTo(new File(path.getParent + "/" + path.getName.replaceAll(":", "%3A")))
+      }
+      if (path.isDirectory && path.getPath.contains(":")) {
+        val newPath =  path.getParent.replaceAll(":", "%3A") + "/" + path.getName
+        FileUtils.moveDirectoryToDirectory(path, new File(newPath),true)
+      }
     })
     getRecursiveListOfFiles(new File(repoPath)).filter(path => path.getName.endsWith(".py")).size > 0
   }
