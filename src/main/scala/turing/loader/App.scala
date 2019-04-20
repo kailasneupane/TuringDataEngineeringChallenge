@@ -34,7 +34,7 @@ object App {
     sparkContext.textFile(uberRepoHadoopPath).collect().toList
       .filter(x => x.startsWith("https://")).foreach(repoUrl => {
 
-
+      println("working on "+ repoUrl)
       /**
         * 1st. clone each repos
         */

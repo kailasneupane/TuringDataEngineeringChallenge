@@ -7,6 +7,7 @@ import java.util.Properties
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.commons.io.FileUtils
+import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.eclipse.jgit.api.errors.TransportException
@@ -91,7 +92,13 @@ object ProcessJob {
           .call()
         //  HdfsUtils.hdfs.create(new Path(destPath + "/" + "empty_file.py"), true)
         retainPyFilesOnly(new java.io.File(cloningPathLocal + repoAuthor + "/" + repoName))
-        HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
+        try {
+          HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
+        } catch {
+          case e1:FileNotFoundException => {
+            HdfsUtils.hdfs.create(new Path(destPath + "/" + "dummy.py"), true)
+          }
+        }
       }
     }
     println(s"git clone $repoAuthor/$repoName successful and only .py files retained.")
