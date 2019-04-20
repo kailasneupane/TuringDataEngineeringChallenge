@@ -14,7 +14,8 @@ import org.eclipse.jgit.api.errors.TransportException
 import org.eclipse.jgit.api.Git
 import parser.python3.{Python3Lexer, Python3Parser}
 import turing.lib.{DuplicateFinder, PyCodeExplorer, PyRepoInfo}
-import turing.utils.{HdfsUtils, PropertiesUtils, StringUtils}
+import turing.utils.{HdfsUtils, StringUtils}
+import javautils.PropertiesUtils
 
 import sys.process._
 
@@ -95,7 +96,7 @@ object ProcessJob {
         try {
           HdfsUtils.copyPyFilesFromLocalToHdfs(srcPath, destPath, false)
         } catch {
-          case e1:FileNotFoundException => {
+          case e1: FileNotFoundException => {
             HdfsUtils.hdfs.create(new Path(destPath + "/" + "dummy.py"), true)
           }
         }
