@@ -2,12 +2,7 @@ package turing.utils
 
 import java.io.File
 
-import org.apache.commons.io.FileUtils
-
-import sys.process._
-
 object LocalfsUtils {
-
 
   def getRecursiveListOfFiles(dir: File): Array[File] = {
     val these = dir.listFiles

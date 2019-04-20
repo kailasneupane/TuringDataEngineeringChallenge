@@ -24,17 +24,19 @@ object App {
 
   def main(args: Array[String]): Unit = {
 
-    val uberRepoHadoopPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("uberRepoRawPath") + "*"
+    val uberRepoUrl = pathProperty.getProperty("uberRepoRawPath")
+    val uberRepoHadoopPath = HdfsUtils.rootPath + "/" + uberRepoUrl + "*"
     val gson = new GsonBuilder().setPrettyPrinting().create()
     val pyRepoInfoList: ListBuffer[PyRepoInfo] = ListBuffer()
 
-    println("Loading uber repo")
+    println(s"Loading uber repo from $uberRepoUrl.")
     ProcessJob.uberRepoLoader()
 
     sparkContext.textFile(uberRepoHadoopPath).collect().toList
       .filter(x => x.startsWith("https://")).foreach(repoUrl => {
 
-      println("working on "+ repoUrl)
+      println("working on " + repoUrl)
+
       /**
         * 1st. clone each repos
         */
@@ -64,19 +66,31 @@ object App {
       println()
       println(gson.toJson(pyRepoWholeInfo))
       println()
+
+      /**
+        * the repo's info is associated to case class is then added to listBuffer to hold the info.
+        */
       pyRepoInfoList += pyRepoWholeInfo
 
     })
 
     sparkContext.stop()
 
+    /**
+      * the bufferList is then converted to a big json data
+      */
     val outputStrJson: String = gson.toJson(pyRepoInfoList.toArray)
+
     val finalOutput = HdfsUtils.rootPath + "/" + pathProperty.getProperty("resultJsonFullPath")
+
+    /**
+      * The final json data is saved as textFile in hdfs path : stage1/repos_info/results.json
+      */
     HdfsUtils.saveTextStrToHdfs(outputStrJson, finalOutput)
 
     println("Process execution completed at " + LocalTime.now())
-    val timeTakenInMinutes = 1.0 * (System.nanoTime() - startTime) / 1000000000 / 60
-    printf("Total time taken: %.2f minutes.\n", timeTakenInMinutes)
+    val timeTakenInSecond = 1.0 * (System.nanoTime() - startTime) / 1000000000
+    printf("Total time taken: %.2f minutes.\n", timeTakenInSecond)
     println("\nPlease find results.json in hadoop path: \n" + finalOutput + "\n")
 
   }

@@ -66,10 +66,12 @@ object StringUtils {
   def getNestingFactor(parenthesisedStr: String): Double = {
     var nestValue = 0
     var wholeParenthesisStrSeparatedByComma = separateOuterParenthesisByComma(parenthesisedStr)
+    println(wholeParenthesisStrSeparatedByComma)
     var outerParenthesisChunk: Array[String] = wholeParenthesisStrSeparatedByComma.split(",")
     for (i <- 0 until outerParenthesisChunk.length) {
       nestValue += getMaxDepthOfParenthesis(outerParenthesisChunk(i))
     }
+    println("nestvalue/count = " + nestValue + "/" + outerParenthesisChunk.length)
     1.0 * nestValue / outerParenthesisChunk.length
   }
 
