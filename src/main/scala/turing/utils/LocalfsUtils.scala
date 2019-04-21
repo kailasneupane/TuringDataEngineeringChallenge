@@ -17,12 +17,16 @@ object LocalfsUtils {
         path.delete()
       if (path.getName.startsWith("_"))
         path.renameTo(new File(path.getParent + "/i" + path.getName))
-      if (!path.isDirectory && path.getPath.contains(":")) {
+      if (!path.isDirectory && path.getName.contains(":")) {
         path.renameTo(new File(path.getParent + "/" + path.getName.replaceAll(":", "%3A")))
       }
       if (path.isDirectory && path.getPath.contains(":")) {
-        val newPath =  path.getParent.replaceAll(":", "%3A") + "/" + path.getName
-        FileUtils.moveDirectoryToDirectory(path, new File(newPath),true)
+        val newPath = path.getPath.replaceAll(":", "%3A")
+        path.renameTo(new File(newPath))
+      }
+      if (path.isDirectory && path.getName.startsWith(".")) {
+        println(path.getParent + " will be renamed")
+        path.renameTo(new File(path.getPath.replaceAll("/\\.", "/i")))
       }
     })
     getRecursiveListOfFiles(new File(repoPath)).filter(path => path.getName.endsWith(".py")).size > 0
