@@ -4,7 +4,7 @@ package turing.loader
 import java.time.LocalTime
 
 import com.google.gson.GsonBuilder
-import org.apache.hadoop.fs.{FileUtil, Path}
+import org.apache.hadoop.fs.Path
 import org.apache.spark.{SparkConf, SparkContext}
 import turing.loader.ProcessJob.pathProperty
 import turing.utils.HdfsUtils
