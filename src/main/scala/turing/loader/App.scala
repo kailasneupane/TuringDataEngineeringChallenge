@@ -3,13 +3,11 @@ package turing.loader
 
 import java.time.LocalTime
 
-import com.google.gson.{Gson, GsonBuilder}
+import com.google.gson.GsonBuilder
 import org.apache.spark.{SparkConf, SparkContext}
-import turing.lib.PyRepoInfo
 import turing.loader.ProcessJob.pathProperty
 import turing.utils.HdfsUtils
 
-import scala.collection.mutable.ListBuffer
 
 object App {
 
@@ -25,9 +23,9 @@ object App {
   def main(args: Array[String]): Unit = {
 
     val uberRepoUrl = pathProperty.getProperty("uberRepoRawPath")
+    val individualJsonPath = pathProperty.getProperty("individualJsonPath")
     val uberRepoHadoopPath = HdfsUtils.rootPath + "/" + uberRepoUrl + "*"
     val gson = new GsonBuilder().setPrettyPrinting().create()
-    val pyRepoInfoList: ListBuffer[PyRepoInfo] = ListBuffer()
 
     println(s"Loading uber repo from $uberRepoUrl.")
     ProcessJob.uberRepoLoader()
@@ -62,37 +60,30 @@ object App {
         */
 
       val pyRepoWholeInfo = ProcessJob.extractInfos(sparkContext, repoUrl)
+      val jsonStr = gson.toJson(pyRepoWholeInfo)
+      val urlSplit = repoUrl.split("/")
 
-      println()
-      println(gson.toJson(pyRepoWholeInfo))
-      println()
+      val repoAuthor = urlSplit(urlSplit.length - 2)
+      val repoName = urlSplit(urlSplit.length - 1)
+      val storingPath = HdfsUtils.rootPath + "/" + individualJsonPath + repoAuthor + "_" + repoName + ".json"
+      HdfsUtils.saveTextStrToHdfs(jsonStr, storingPath)
 
-      /**
-        * the repo's info is associated to case class is then added to listBuffer to hold the info.
-        */
-      pyRepoInfoList += pyRepoWholeInfo
+      println("*****************************************")
+      println(jsonStr)
+      println("*****************************************")
 
     })
 
+    val finalJsonStr = sparkContext.wholeTextFiles(HdfsUtils.rootPath + "/" + individualJsonPath + "/*").map(u => u._2).collect().mkString("[\n", ",\n", "\n]")
+    val finalJsonStrPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("resultJsonFilePath")
+    println("Stopping Process and generating final results.json.\n")
     sparkContext.stop()
 
-    /**
-      * the bufferList is then converted to a big json data
-      */
-    val outputStrJson: String = gson.toJson(pyRepoInfoList.toArray)
-
-    val finalOutput = HdfsUtils.rootPath + "/" + pathProperty.getProperty("resultJsonFullPath")
-
-    /**
-      * The final json data is saved as textFile in hdfs path : stage1/repos_info/results.json
-      */
-    HdfsUtils.saveTextStrToHdfs(outputStrJson, finalOutput)
-
+    HdfsUtils.saveTextStrToHdfs(finalJsonStr, finalJsonStrPath)
+    println("results.json successfully created at: \n" + finalJsonStrPath + "\n")
     println("Process execution completed at " + LocalTime.now())
     val timeTakenInSecond = 1.0 * (System.nanoTime() - startTime) / 1000000000
-    printf("Total time taken: %.2f seconds.\n", timeTakenInSecond)
-    println("\nPlease find results.json in hadoop path: \n" + finalOutput + "\n")
-
+    printf("Total time taken: %f seconds.\n", timeTakenInSecond)
   }
 
 }

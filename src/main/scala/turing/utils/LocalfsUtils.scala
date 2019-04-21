@@ -2,8 +2,6 @@ package turing.utils
 
 import java.io.File
 
-import org.apache.commons.io.FileUtils
-
 object LocalfsUtils {
 
   def getRecursiveListOfFiles(dir: File): Array[File] = {
@@ -25,7 +23,6 @@ object LocalfsUtils {
         path.renameTo(new File(newPath))
       }
       if (path.isDirectory && path.getName.startsWith(".")) {
-        println(path.getParent + " will be renamed")
         path.renameTo(new File(path.getPath.replaceAll("/\\.", "/i")))
       }
     })

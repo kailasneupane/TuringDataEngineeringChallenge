@@ -37,21 +37,22 @@ object ProcessJob {
     val localPathFile = localPath + fileName
     val hadoopPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("uberRepoRawPath") + fileName
 
-    println("local path " + localPath)
-    println("fileName " + fileName)
-    println(s"Loading uber repo from $url")
+    if (!new File(localPathFile).exists()) {
+      println(s"$fileName doesn't exist on $localPath. So, downloading from $url")
+      new File(localPath).mkdirs()
+      new URL(url) #> new File(localPathFile) !!
 
-    new File(localPath).mkdirs()
-    new URL(url) #> new File(localPathFile) !!
+    }
 
     HdfsUtils.copyPyFilesFromLocalToHdfs(localPathFile, hadoopPath, false)
-    println(s"uber repo loaded in $hadoopPath")
+    println(s"uber repo loaded in hadoop path: $hadoopPath")
   }
 
 
   /**
     * The urls list fetched from uberRepoLoader method is then passed to this function one by one.
     * This function will then clones the repo, checks python files and load then to HDFS.
+    *
     * @param url
     */
   def cloneRepoAndRetainPyFilesOnly(url: String): Unit = {
@@ -93,6 +94,7 @@ object ProcessJob {
 
   /**
     * The major tasks from 1 to 6 mentioned on challenge is performed here.
+    *
     * @param sparkContext
     * @param repoUrl
     * @return

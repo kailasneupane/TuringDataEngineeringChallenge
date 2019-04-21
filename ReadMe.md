@@ -29,12 +29,19 @@ This will create a runnable jar in:<br>
 
 Then run the jar using command:
 ```bash
-hadoop jar target/scala-2.11/turingsPyGitAnalysis.jar
+hadoop jar path/to/turingsPyGitAnalysis.jar
 ```
 
 After the task completes, the final file **results.json** will be generated in HDFS location:<br>
 
-**_stage1/repos_info/results.json_** 
+**_stage2/merged_repos/results.json_** 
+
+## Misc
+Assuming that, you are running this jar in local PC with hadoop installed, you may run into OutOfMemory, HeapSize issue, or internet may go off.
+
+In such condition, You can see `output/uber_repo/url_list.csv` beside **turingsPyGitAnalysis.jar**.
+<br>
+you just need to update url_list.csv and remove those repo list whose operation are already completed. Then run the jar again.
 
 ## Contributing
 If any bugs are observed, please inform me by opening an issue or you can contact me 
