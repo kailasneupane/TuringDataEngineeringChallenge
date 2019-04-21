@@ -10,7 +10,7 @@ javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 
 lazy val root = (project in file("."))
   .settings(
-    name := "turing_git_analysis",
+    name := "TuringDataEngineeringChallenge",
     assemblyJarName in assembly := "turingsPyGitAnalysis.jar",
     mainClass in assembly := Some("turing.loader.App"),
     libraryDependencies += scalaTest % Test
