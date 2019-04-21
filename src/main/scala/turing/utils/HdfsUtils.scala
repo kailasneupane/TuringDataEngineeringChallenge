@@ -9,9 +9,9 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 object HdfsUtils {
 
   val hadoopConf = new Configuration()
-  val uriFromLocal = Process("/usr/local/hadoop/bin/hdfs getconf -confKey fs.defaultFS").!!.trim
+  //val uriFromLocal = Process("/usr/local/hadoop/bin/hdfs getconf -confKey fs.defaultFS").!!.trim
   val uri = hadoopConf.get("fs.defaultFS")
-  val hdfs = FileSystem.get(new URI(if (uri.startsWith("file")) uriFromLocal else uri), hadoopConf)
+  val hdfs = FileSystem.get(new URI(uri), hadoopConf)
 
   def rootPath = hdfs.getHomeDirectory.toString
 
