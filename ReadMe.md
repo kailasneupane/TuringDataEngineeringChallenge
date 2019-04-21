@@ -34,7 +34,7 @@ hadoop jar path/to/turingsPyGitAnalysis.jar
 
 After the task completes, the final file **results.json** will be generated in HDFS location:<br>
 
-**_stage2/merged_repos/results.json_** 
+**_stage2/merged_jsons/results.json_** 
 
 ## Misc
 Assuming that, you are running this jar in local PC with hadoop installed, you may run into OutOfMemory, HeapSize issue, or internet may go off.

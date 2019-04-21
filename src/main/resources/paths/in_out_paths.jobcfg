@@ -11,4 +11,4 @@ uberRepoRawPath = raw/uber_repo/
 pyStage0Path = stage0/repos/
 
 individualJsonPath =  stage1/individual_repos/
-resultJsonFilePath =  stage2/merged_repos/results.json
+resultJsonFilePath =  stage2/merged_jsons/results.json
