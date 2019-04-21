@@ -39,9 +39,7 @@ After the task completes, the final file **results.json** will be generated in H
 ## Misc
 Assuming that, you are running this jar in local PC with hadoop installed, you may run into OutOfMemory, HeapSize issue, or internet may go off.
 
-In such condition, You can see `output/uber_repo/url_list.csv` beside **turingsPyGitAnalysis.jar**.
-<br>
-you just need to update url_list.csv and remove those repo list whose operation are already completed. Then run the jar again.
+In such condition, you can run the jar again. The jar will check if a python repo was already processed or not and saves the time by ignoring the pre-processed data if it exists in hadoop. Then at last of checking and processing repos, it will generate results.json by combining the individual json as json array.
 
 ## Contributing
 If any bugs are observed, please inform me by opening an issue or you can contact me 
