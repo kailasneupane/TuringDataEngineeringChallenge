@@ -1,12 +1,18 @@
 package turing.utils
 
 import java.io.File
+import java.nio.file.Files
 
 object LocalfsUtils {
 
   def getRecursiveListOfFiles(dir: File): Array[File] = {
     val these = dir.listFiles
-    these ++ these.filter(_.isDirectory).flatMap(getRecursiveListOfFiles)
+    these ++ these.filter(x => {
+      {
+        if (Files.isSymbolicLink(x.toPath)) x.delete() //side effect :(
+      }
+      x.isDirectory
+    }).flatMap(getRecursiveListOfFiles)
   }
 
   def retainPyFilesOnly(repoPath: String): Boolean = {
@@ -29,4 +35,8 @@ object LocalfsUtils {
     getRecursiveListOfFiles(new File(repoPath)).filter(path => path.getName.endsWith(".py")).size > 0
   }
 
+
+  def main(args: Array[String]): Unit = {
+    getRecursiveListOfFiles(new File("output/repos/le9i0nx/ansible-role-test")).foreach(println)
+  }
 }
