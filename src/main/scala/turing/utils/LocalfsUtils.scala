@@ -19,7 +19,7 @@ object LocalfsUtils {
     getRecursiveListOfFiles(new File(repoPath)).reverse.foreach(path => {
       if (!path.getName.endsWith(".py"))
         path.delete()
-      if (path.getName.startsWith("_"))
+      if (path.getName.startsWith("_") || path.getName.startsWith("."))
         path.renameTo(new File(path.getParent + "/i" + path.getName))
       if (!path.isDirectory && path.getName.contains(":")) {
         path.renameTo(new File(path.getParent + "/" + path.getName.replaceAll(":", "%3A")))
