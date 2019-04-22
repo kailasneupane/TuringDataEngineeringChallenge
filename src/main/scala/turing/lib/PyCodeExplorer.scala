@@ -31,7 +31,7 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
   override def enterExpr_stmt(ctx: Python3Parser.Expr_stmtContext): Unit = {
     try {
       val variableName = ctx.testlist_star_expr().get(0).getText()
-      if (!(variableName.trim.endsWith(")") || variableName.trim.startsWith("print") || variableName.trim.startsWith("\""))) {
+      if (!(variableName.trim.endsWith(")") || variableName.trim.startsWith("print") || variableName.trim.startsWith("\"") || variableName.trim.startsWith("'"))) {
         variableAccumulator.add(1)
       }
     } catch {

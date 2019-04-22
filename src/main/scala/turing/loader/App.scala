@@ -18,6 +18,8 @@ object App {
   val sparkConf = new SparkConf().setAppName("Practice").setMaster("local[*]")
     .set("spark.hadoop.validateOutputSpecs", "false") // to override output
     .set("spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive", "true")
+    .set("spark.driver.allowMultipleContexts", "true")
+
 
   val sparkContext = new SparkContext(sparkConf)
 
@@ -26,20 +28,21 @@ object App {
     val uberRepoUrl = pathProperty.getProperty("uberRepoRawPath")
     val individualJsonPath = pathProperty.getProperty("individualJsonPath")
     val uberRepoHadoopPath = HdfsUtils.rootPath + "/" + uberRepoUrl + "*"
-    val gson = new GsonBuilder().setPrettyPrinting().create()
 
     println(s"Loading uber repo from $uberRepoUrl.")
     ProcessJob.uberRepoLoader()
 
-    sparkContext.textFile(uberRepoHadoopPath).collect().toList
-      .filter(x => x.startsWith("https://")).foreach(repoUrl => {
+    val counter = sparkContext.longAccumulator("Processed repo counter")
+    sparkContext.textFile(uberRepoHadoopPath).filter(x => x.startsWith("https://")).foreach(repoUrl => {
 
       val urlSplit = repoUrl.split("/")
       val repoAuthor = urlSplit(urlSplit.length - 2)
       val repoName = urlSplit(urlSplit.length - 1)
       val storingPath = HdfsUtils.rootPath + "/" + individualJsonPath + repoAuthor + "_" + repoName + ".json"
 
+      counter.add(1)
       println(s"\nworking on $repoUrl.")
+      println("Processing Accumulator ID = " + counter.value)
 
       if (HdfsUtils.hdfs.exists(new Path(storingPath))) {
         println(s"Json data from $repoUrl is already generated.\nIf you want to process again then delete $storingPath first.\n")
@@ -70,7 +73,7 @@ object App {
           */
 
         val pyRepoWholeInfo = ProcessJob.extractInfos(sparkContext, repoUrl)
-        val jsonStr = gson.toJson(pyRepoWholeInfo)
+        val jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(pyRepoWholeInfo)
         HdfsUtils.saveTextStrToHdfs(jsonStr, storingPath)
 
         println("*****************************************")
