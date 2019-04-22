@@ -1,6 +1,4 @@
-import Dependencies._
-
-ThisBuild / scalaVersion := "2.11.2"
+ThisBuild / scalaVersion := "2.11.8"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "np.com.kailasneupane"
 ThisBuild / organizationName := "kailasneupane"
@@ -12,8 +10,8 @@ lazy val root = (project in file("."))
   .settings(
     name := "TuringDataEngineeringChallenge",
     assemblyJarName in assembly := "turingsPyGitAnalysis.jar",
-    mainClass in assembly := Some("turing.loader.App"),
-    libraryDependencies += scalaTest % Test
+    mainClass in assembly := Some("turing.loader.App")
+    //libraryDependencies += scalaTest % Test
   )
 
 assemblyMergeStrategy in assembly := {
@@ -32,6 +30,8 @@ dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.
 assemblyShadeRules in assembly := Seq(
   ShadeRule.rename("io.netty.**" -> "shadenetty.@1").inAll
 )
+
+test in assembly := {}
 
 mainClass in(Compile, run) := Some("turing.loader.App")
 
