@@ -35,7 +35,7 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
         variableAccumulator.add(1)
       }
     } catch {
-      case e: NullPointerException => ()
+      case e: Exception => ()
     }
   }
 
@@ -45,7 +45,7 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
       val importName = ctx.import_name().dotted_as_names().dotted_as_name().get(0).dotted_name().NAME().get(0).getText().split("\\.")(0)
       importsAccumulator.add(importName)
     } catch {
-      case e: NullPointerException => ()
+      case e: Exception => ()
     }
   }
 
@@ -57,7 +57,7 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
       importsAccumulator.add(importName)
       //}
     } catch {
-      case e1: NullPointerException => ()
+      case e1: Exception => ()
     }
   }
 
@@ -72,7 +72,7 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
       }
       functionAccumulator.add(1)
     } catch {
-      case e: NullPointerException => ()
+      case e: Exception => ()
     }
   }
 
@@ -84,7 +84,7 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
       // println(ctx.for_stmt().getText)
       forLoopParenthesisAccumulator.add("(")
     } catch {
-      case e1: NullPointerException => ()
+      case e1: Exception => ()
     }
   }
 
@@ -93,7 +93,7 @@ class PyCodeExplorer(sparkContext: SparkContext) extends Python3BaseListener wit
       val endLine = ctx.for_stmt.getStop.getLine
       forLoopParenthesisAccumulator.add(")")
     } catch {
-      case e1: NullPointerException => ()
+      case e1: Exception => ()
     }
   }
 }
