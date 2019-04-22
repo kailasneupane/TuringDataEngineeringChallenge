@@ -23,9 +23,11 @@ libraryDependencies += "org.apache.spark" %% "spark-core" % "2.3.0"
 libraryDependencies += "org.antlr" % "antlr4-runtime" % "4.7.2"
 libraryDependencies += "org.eclipse.jgit" % "org.eclipse.jgit" % "5.3.0.201903130848-r"
 
-dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.7.8"
-dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.8"
-dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.7.8"
+//strange: remove comments from dependencyOverrides to run on local hadoop installed pc, i will fix it later
+
+//dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.7.8"
+//dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.7.8"
+//dependencyOverrides += "com.fasterxml.jackson.module" % "jackson-module-scala_2.11" % "2.7.8"
 
 assemblyShadeRules in assembly := Seq(
   ShadeRule.rename("io.netty.**" -> "shadenetty.@1").inAll
