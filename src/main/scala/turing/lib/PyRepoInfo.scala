@@ -1,5 +1,7 @@
 package turing.lib
 
+import com.google.gson.{Gson, GsonBuilder}
+
 /**
   * example:
   *
@@ -20,3 +22,19 @@ case class PyRepoInfo(
                        average_parameters: Double,
                        average_variables: Double
                      )
+
+
+object PyRepoInfoJsonParser {
+
+  var pyRepoInfo = PyRepoInfo("lold", 12, Array("Apple", "ball"), 3.43, 0.45, 33.67, 120.45)
+
+
+  def main(args: Array[String]): Unit = {
+    var str = new GsonBuilder().setPrettyPrinting().create().toJson(pyRepoInfo)
+    println(str)
+
+    var s: PyRepoInfo = (new Gson().fromJson(str, classOf[PyRepoInfo]))
+    println("*************")
+    s.libraries.foreach(println)
+  }
+}

@@ -73,5 +73,4 @@ object StringUtils {
     }
     1.0 * nestValue / outerParenthesisChunk.length
   }
-
 }

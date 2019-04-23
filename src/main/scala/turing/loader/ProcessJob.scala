@@ -4,6 +4,7 @@ import java.io.File
 import java.net.URL
 import java.util.Properties
 
+import com.google.gson.Gson
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 import org.apache.commons.io.FileUtils
@@ -156,6 +157,21 @@ object ProcessJob {
       if (average_parameters.isNaN) 0.0 else average_parameters,
       if (average_variables.isNaN) 0.0 else average_variables
     )
+  }
+
+  def parsePyRepoInfoJsonStr(pyRepoInfoJsonStr: String): PyRepoInfo = {
+    (new Gson().fromJson(pyRepoInfoJsonStr, classOf[PyRepoInfo]))
+  }
+
+  def isPyRepoEmpty(pyRepoInfo: PyRepoInfo): Boolean = {
+    (
+      pyRepoInfo.number_of_lines == 0
+        && pyRepoInfo.nesting_factor == 0.0
+        && pyRepoInfo.libraries.isEmpty
+        && pyRepoInfo.code_duplication == 0.0
+        && pyRepoInfo.average_parameters == 0.0
+        && pyRepoInfo.average_variables == 0.0
+      )
   }
 
 }

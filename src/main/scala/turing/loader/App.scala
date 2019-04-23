@@ -27,6 +27,7 @@ object App {
 
     val uberRepoUrl = pathProperty.getProperty("uberRepoRawPath")
     val individualJsonPath = pathProperty.getProperty("individualJsonPath")
+    val individualEmptyJsonPath = pathProperty.getProperty("individualEmptyJsonPath")
     val uberRepoHadoopPath = HdfsUtils.rootPath + "/" + uberRepoUrl + "*"
 
     println(s"Loading uber repo from $uberRepoUrl.")
@@ -39,13 +40,14 @@ object App {
       val repoAuthor = urlSplit(urlSplit.length - 2)
       val repoName = urlSplit(urlSplit.length - 1)
       val storingPath = HdfsUtils.rootPath + "/" + individualJsonPath + repoAuthor + "_" + repoName + ".json"
+      val storingPathOfEmptyRepo = HdfsUtils.rootPath + "/" + individualEmptyJsonPath + repoAuthor + "_" + repoName + ".json"
 
       counter.add(1)
       println(s"\nworking on $repoUrl.")
-      println("Processing Accumulator ID = " + counter.value)
+      println("Processing ID = " + counter.value)
 
-      if (HdfsUtils.hdfs.exists(new Path(storingPath))) {
-        println(s"Json data from $repoUrl is already generated.\nIf you want to process again then delete $storingPath first.\n")
+      if (HdfsUtils.hdfs.exists(new Path(storingPath))) { // todo check empty json
+        println(s"Json data from $repoUrl is already generated and it is not Empty.\nIf you want to process again then delete $storingPath first.\n")
       } else {
 
         /**
@@ -74,7 +76,23 @@ object App {
 
         val pyRepoWholeInfo = ProcessJob.extractInfos(sparkContext, repoUrl)
         val jsonStr = new GsonBuilder().setPrettyPrinting().create().toJson(pyRepoWholeInfo)
+
+        /**
+          * Json generated from individual repo is saved in following path and later all json are
+          * merged to one single json array.
+          * HDFS Path => hdfsRootPath/stage1/individual_repos/repoAuthor_repoName.json
+          */
         HdfsUtils.saveTextStrToHdfs(jsonStr, storingPath)
+
+        /**
+          * If a repo is empty or does not contain even a single .py file, it will be stored in following HDFS path
+          * to debug later.
+          * HDFS Path => hdfsRootPath/stage1/individual_repos_empty/repoAuthor_repoName.json
+          *
+          */
+        if (ProcessJob.isPyRepoEmpty(pyRepoWholeInfo)) {
+          HdfsUtils.saveTextStrToHdfs(jsonStr, storingPathOfEmptyRepo)
+        }
 
         println("*****************************************")
         println(jsonStr)
@@ -82,7 +100,7 @@ object App {
       }
     })
 
-    val finalJsonStr = sparkContext.wholeTextFiles(HdfsUtils.rootPath + "/" + individualJsonPath + "/*").map(u => u._2).collect().mkString("[\n", ",\n", "\n]")
+    val finalJsonStr = sparkContext.wholeTextFiles(HdfsUtils.rootPath + "/" + "individual_repos" + "*/*").map(u => u._2).collect().mkString("[\n", ",\n", "\n]")
     val finalJsonStrPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("resultJsonFilePath")
     println(s"Stopping Process and generating final results.json from $individualJsonPath.\n")
     sparkContext.stop()
