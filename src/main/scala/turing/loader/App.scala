@@ -12,6 +12,8 @@ import turing.utils.HdfsUtils
 
 object App {
 
+  sys.props.update("spark.ui.proxyBase", "")
+
   val startTime = System.nanoTime()
   println("Process execution started at " + LocalTime.now())
 
