@@ -165,7 +165,6 @@ object ProcessJob {
 
   def isPyRepoJsonStrEmpty(sparkContext: SparkContext, hdfsPath: String): Boolean = {
     val jsonStr: String = sparkContext.wholeTextFiles(hdfsPath).map(x => x._2).first()
-    println(jsonStr)
     isPyRepoEmpty(parsePyRepoInfoJsonStr(jsonStr))
   }
 
