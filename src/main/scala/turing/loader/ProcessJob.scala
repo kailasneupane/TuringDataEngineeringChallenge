@@ -163,6 +163,12 @@ object ProcessJob {
     (new Gson().fromJson(pyRepoInfoJsonStr, classOf[PyRepoInfo]))
   }
 
+  def isPyRepoJsonStrEmpty(sparkContext: SparkContext, hdfsPath: String): Boolean = {
+    val jsonStr: String = sparkContext.wholeTextFiles(hdfsPath).map(x => x._2).first()
+    println(jsonStr)
+    isPyRepoEmpty(parsePyRepoInfoJsonStr(jsonStr))
+  }
+
   def isPyRepoEmpty(pyRepoInfo: PyRepoInfo): Boolean = {
     (
       pyRepoInfo.number_of_lines == 0

@@ -46,7 +46,7 @@ object App {
       println(s"\nworking on $repoUrl.")
       println("Processing ID = " + counter.value)
 
-      if (HdfsUtils.hdfs.exists(new Path(storingPath))) { // todo check empty json
+      if (HdfsUtils.hdfs.exists(new Path(storingPath)) && !ProcessJob.isPyRepoJsonStrEmpty(sparkContext, storingPath)) { // todo check empty json
         println(s"Json data from $repoUrl is already generated and it is not Empty.\nIf you want to process again then delete $storingPath first.\n")
       } else {
 
@@ -100,7 +100,7 @@ object App {
       }
     })
 
-    val finalJsonStr = sparkContext.wholeTextFiles(HdfsUtils.rootPath + "/" + "individual_repos" + "*/*").map(u => u._2).collect().mkString("[\n", ",\n", "\n]")
+    val finalJsonStr = sparkContext.wholeTextFiles(HdfsUtils.rootPath + "/" + individualJsonPath + "/*").map(u => u._2).collect().mkString("[\n", ",\n", "\n]")
     val finalJsonStrPath = HdfsUtils.rootPath + "/" + pathProperty.getProperty("resultJsonFilePath")
     println(s"Stopping Process and generating final results.json from $individualJsonPath.\n")
     sparkContext.stop()
