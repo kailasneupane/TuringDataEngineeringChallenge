@@ -12,6 +12,7 @@ Before running the code, please be sure that Git, java, scala and SBT are alread
 Used Languages Versions:-
 - java version: 1.8
 - scala: 2.11
+- spark 2.1.1
 - SBT: 1.2.7
 
 Process to run the code:
@@ -29,7 +30,7 @@ This will create a runnable jar in:<br>
 
 Then run the jar using command:
 ```bash
-hadoop jar path/to/turingsPyGitAnalysis.jar
+spark-submit --deploy-mode cluster --master yarn path/to/turingsPyGitAnalysis.jar
 ```
 
 After the task completes, the final file **results.json** will be generated in HDFS location:<br>
